@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Backend
+backend/.env
+*.db
+*.sqlite3
+backend/trained_model/
+backend/generated_reports/
+backend/reports/
+backend/uploads/
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Frontend env
+frontend/.env.local
+frontend/.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
