@@ -17,12 +17,14 @@ import {
   X,
   Stethoscope,
   LogOut,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navLinks = [
   { href: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/patient/symptom-checker', label: 'Symptom Checker', icon: Search },
+  { href: '/patient/nearby-doctors', label: 'Nearby Doctors', icon: MapPin },
   { href: '/patient/appointments', label: 'My Appointments', icon: CalendarDays },
   { href: '/patient/history', label: 'Diagnosis History', icon: History },
   { href: '/patient/profile', label: 'Health Profile', icon: User },

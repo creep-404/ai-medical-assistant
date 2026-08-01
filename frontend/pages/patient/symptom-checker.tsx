@@ -18,10 +18,12 @@ import {
   Pill,
   Thermometer,
   Heart,
+  MapPin,
 } from 'lucide-react';
 import PatientSidebar from '@/components/patient/PatientSidebar';
 import PatientHeader from '@/components/patient/PatientHeader';
 import { medicalService } from '@/services/medical.service';
+import { nearbyService } from '@/services/nearby.service';
 
 const symptomCategories = [
   {
@@ -59,7 +61,17 @@ export default function SymptomCheckerPage() {
   const [predicting, setPredicting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [showEmergency, setShowEmergency] = useState(false);
+  const [emergencyHospitals, setEmergencyHospitals] = useState<any[]>([]);
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
+  const [hospitalError, setHospitalError] = useState<string | null>(null);
   const [categories, setCategories] = useState(symptomCategories);
+
+  const emergencyContacts = [
+    { name: 'Emergency Services', number: '112' },
+    { name: 'Ambulance', number: '108' },
+    { name: 'Police', number: '100' },
+    { name: 'National Poison Control', number: '011-26589391' },
+  ];
 
   useEffect(() => {
     let cancelled = false;
@@ -114,6 +126,7 @@ export default function SymptomCheckerPage() {
 
       if (res.is_emergency) {
         setShowEmergency(true);
+        findNearestHospitals();
         return;
       }
 
@@ -130,6 +143,7 @@ export default function SymptomCheckerPage() {
         recoveryTime: res.recovery_time,
         precautions: res.precautions || [],
         whenToVisitDoctor: res.when_to_see_doctor,
+        specialist: res.recommended_specialist,
         topPredictions: res.top_predictions || [],
       });
     } catch {
@@ -158,6 +172,54 @@ export default function SymptomCheckerPage() {
     setSelectedSymptoms([]);
     setResult(null);
     setSearchQuery('');
+  }
+
+  async function findNearestHospitals() {
+    setLoadingHospitals(true);
+    setEmergencyHospitals([]);
+    setHospitalError(null);
+    let lat: number | null = null;
+    let lng: number | null = null;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        try {
+          const pos: any = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 }));
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+        } catch (geoErr: any) {
+          console.warn('[emergency] geolocation failed:', geoErr?.message || geoErr?.code || geoErr);
+          lat = null;
+        }
+      }
+      if (lat == null || lng == null) {
+        const city = window.prompt('We could not detect your location. Enter your city to find nearest hospitals:');
+        if (!city) return;
+        const geo = await nearbyService.geocodeCity(city);
+        lat = geo?.lat ?? null;
+        lng = geo?.lng ?? null;
+      }
+      if (lat == null || lng == null) {
+        setHospitalError('Could not determine your location. Please enable location access or try again.');
+        return;
+      }
+      const res = await nearbyService.searchNearby({ lat, lng, radius_km: 20, place_type: 'hospital' });
+      const places = Array.isArray(res) ? res : Array.isArray(res?.places) ? res.places : [];
+      if (!Array.isArray(places)) {
+        setHospitalError('Hospital lookup returned an unexpected format (expected an array). Please retry.');
+        return;
+      }
+      const hospitals = places.filter((p: any) => p.type === 'hospital').slice(0, 5);
+      setEmergencyHospitals(hospitals);
+      if (hospitals.length === 0) {
+        setHospitalError(`No hospitals found within 20 km. Raw response had ${places.length} result(s).`);
+      }
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || String(err);
+      console.error('[emergency] hospital lookup error:', detail);
+      setHospitalError(detail);
+    } finally {
+      setLoadingHospitals(false);
+    }
   }
 
   return (
@@ -278,7 +340,7 @@ export default function SymptomCheckerPage() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
               >
-                <motion.div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-red-200">
+                <motion.div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-red-200 max-h-[90vh] overflow-y-auto">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
                     <AlertTriangle className="w-8 h-8 text-red-600" />
                   </div>
@@ -287,6 +349,82 @@ export default function SymptomCheckerPage() {
                     Your symptoms may indicate a serious medical condition. Please visit the nearest hospital or consult a
                     licensed doctor immediately.
                   </p>
+
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-red-600" /> Nearest Hospitals
+                    </h3>
+                    {loadingHospitals ? (
+                      <div className="flex items-center justify-center py-4 text-gray-500 text-sm">
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Locating hospitals...
+                      </div>
+                    ) : emergencyHospitals.length > 0 ? (
+                      <div className="space-y-2">
+                        {emergencyHospitals.map((h: any, i: number) => (
+                          <a
+                            key={i}
+                            href={h.website || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block p-3 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-gray-900">{h.name}</p>
+                              <span className="text-xs font-medium text-red-700 shrink-0">
+                                {h.distance_km != null ? `${h.distance_km} km` : 'Distance unknown'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
+                              {h.address && h.address !== 'Address not available' ? h.address : 'Address unavailable'}
+                              {h.lat != null && h.lng != null ? ` (${h.lat.toFixed(4)}, ${h.lng.toFixed(4)})` : ''}
+                            </p>
+                            <div className="flex items-center justify-between mt-1.5">
+                              {h.phone ? (
+                                <a href={`tel:${String(h.phone).replace(/[^0-9+]/g, '')}`} className="text-xs text-blue-700 font-medium hover:underline">
+                                  📞 {h.phone}
+                                </a>
+                              ) : (
+                                <span className="text-xs text-gray-400">Phone unavailable</span>
+                              )}
+                              {h.website && <span className="text-xs text-gray-400">Website available</span>}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        {hospitalError ? (
+                          <p className="text-sm text-red-600">{hospitalError}</p>
+                        ) : (
+                          <p className="text-sm text-gray-500">Hospital list unavailable. Call Emergency Services immediately.</p>
+                        )}
+                        <button
+                          onClick={findNearestHospitals}
+                          className="mt-3 w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Loader2 className={`w-4 h-4 ${loadingHospitals ? 'animate-spin' : 'hidden'}`} />
+                          Retry Search
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Emergency Contacts</h3>
+                    <div className="space-y-2">
+                      {emergencyContacts.map((c) => (
+                        <a
+                          key={c.name}
+                          href={`tel:${c.number.replace(/[^0-9+]/g, '')}`}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <span className="text-sm text-gray-700">{c.name}</span>
+                          <span className="text-sm font-bold text-red-700">{c.number}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex gap-3">
                     <button
                       onClick={() => { setShowEmergency(false); handleReset(); }}
@@ -346,6 +484,16 @@ export default function SymptomCheckerPage() {
                       />
                     </div>
                   </div>
+
+                  {result.specialist && (
+                    <div className="flex items-center justify-between gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <Stethoscope className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-medium text-emerald-800">Recommended Specialist</span>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-700">{result.specialist}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -424,6 +572,15 @@ export default function SymptomCheckerPage() {
                     <Download className="w-4 h-4" />
                     Generate Report
                   </motion.button>
+                  <motion.a
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    href={`/patient/nearby-doctors?disease=${encodeURIComponent(result.disease || '')}&specialist=${encodeURIComponent(result.specialist || '')}`}
+                    className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Find Nearby Doctors
+                  </motion.a>
                   <motion.a
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

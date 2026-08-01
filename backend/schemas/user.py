@@ -103,6 +103,8 @@ class DoctorProfileResponse(BaseModel):
     is_verified: bool = False
     bio: Optional[str] = None
     rating: Optional[float] = 0.0
+    lat: Optional[float] = None
+    lng: Optional[float] = None
     user: Optional[UserResponse] = None
 
     class Config:

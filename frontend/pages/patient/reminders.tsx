@@ -53,7 +53,7 @@ export default function RemindersPage() {
     setLoading(true);
     try {
       const res = await medicalService.getReminders();
-      setReminders(res.data || []);
+      setReminders(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []);
     } catch {
       setReminders([]);
     } finally {
@@ -115,7 +115,7 @@ export default function RemindersPage() {
 
   const todayEntries = reminders
     .filter((r) => r.active)
-    .flatMap((r) => r.times.map((t) => ({ time: t, medicine: r.medicineName, dosage: r.dosage })))
+    .flatMap((r) => (Array.isArray(r.times) ? r.times : []).map((t) => ({ time: t, medicine: r.medicineName, dosage: r.dosage })))
     .sort((a, b) => a.time.localeCompare(b.time));
 
   return (

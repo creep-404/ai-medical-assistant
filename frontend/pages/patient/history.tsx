@@ -46,8 +46,20 @@ export default function HistoryPage() {
     setLoading(true);
     try {
       const res = await medicalService.getPredictionHistory();
-      setDiagnoses(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []);
-    } catch {
+      const raw = Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : [];
+      const normalized = raw.map((d: any) => {
+        let symptoms: string[] = d.symptoms;
+        if (typeof d.symptoms === 'string') {
+          symptoms = d.symptoms.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+        if (!Array.isArray(symptoms)) {
+          symptoms = [];
+        }
+        return { ...d, symptoms };
+      });
+      setDiagnoses(normalized);
+    } catch (err: any) {
+      console.error('[history] load error:', err?.message || err);
       setDiagnoses([]);
     } finally {
       setLoading(false);

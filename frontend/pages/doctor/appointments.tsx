@@ -1,75 +1,91 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  CalendarDays, Search, Filter, Clock, User, MapPin,
+  CalendarDays, Search, Clock, User,
   CheckCircle, XCircle, Calendar, ChevronLeft, ChevronRight,
-  AlertTriangle, Stethoscope, FileText
+  AlertTriangle, Stethoscope, Loader2, MapPin
 } from 'lucide-react'
 import DoctorSidebar from '@/components/doctor/DoctorSidebar'
 import DoctorHeader from '@/components/doctor/DoctorHeader'
+import { appointmentService } from '@/services/appointment.service'
+import toast from 'react-hot-toast'
 
 interface Appointment {
   id: number
-  patientName: string
-  age: number
-  gender: string
-  time: string
+  patient_name?: string
+  patientName?: string
   date: string
-  reason: string
-  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled'
-  type: string
-  notes: string
+  time: string
+  reason?: string
+  status: string
+  notes?: string
+  clinic?: string
 }
-
-const allAppointments: Appointment[] = [
-  { id: 1, patientName: 'Sarah Johnson', age: 34, gender: 'Female', time: '9:00 AM', date: '2026-07-30', reason: 'Regular Checkup - Annual physical examination', status: 'Confirmed', type: 'Checkup', notes: 'Patient has history of mild hypertension' },
-  { id: 2, patientName: 'Michael Chen', age: 45, gender: 'Male', time: '10:30 AM', date: '2026-07-30', reason: 'Heart Palpitations - Irregular heartbeat noticed', status: 'Confirmed', type: 'Consultation', notes: 'ECG recommended' },
-  { id: 3, patientName: 'Emily Davis', age: 28, gender: 'Female', time: '11:00 AM', date: '2026-07-30', reason: 'Follow-up - Post treatment evaluation', status: 'Pending', type: 'Follow-up', notes: 'Previous diagnosis: Migraine' },
-  { id: 4, patientName: 'James Wilson', age: 52, gender: 'Male', time: '1:30 PM', date: '2026-07-30', reason: 'Chest Pain - Discomfort in chest area', status: 'Confirmed', type: 'Emergency', notes: 'Urgent - Possible angina' },
-  { id: 5, patientName: 'Lisa Anderson', age: 39, gender: 'Female', time: '3:00 PM', date: '2026-07-30', reason: 'Cardio Consultation - Heart health review', status: 'Cancelled', type: 'Consultation', notes: 'Rescheduled to next week' },
-  { id: 6, patientName: 'David Thompson', age: 58, gender: 'Male', time: '4:30 PM', date: '2026-07-30', reason: 'Blood Pressure Check', status: 'Confirmed', type: 'Checkup', notes: 'Ongoing hypertension management' },
-  { id: 7, patientName: 'Maria Garcia', age: 31, gender: 'Female', time: '9:30 AM', date: '2026-07-31', reason: 'Prenatal Checkup', status: 'Pending', type: 'Checkup', notes: 'First trimester screening' },
-  { id: 8, patientName: 'Robert Kim', age: 48, gender: 'Male', time: '2:00 PM', date: '2026-07-31', reason: 'Stress Test Results Review', status: 'Confirmed', type: 'Follow-up', notes: ' Review stress test outcomes' },
-]
 
 const statusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    Confirmed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
-    Pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-    Completed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-    Cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+    pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+    confirmed: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+    completed: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+    rejected: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+    cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
   }
-  return styles[status] || styles.Pending
+  return styles[status] || styles.pending
 }
 
+const statusLabel = (status: string) =>
+  status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'
+
 export default function AppointmentsPage() {
+  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<number | null>(null)
   const [view, setView] = useState<'list' | 'calendar'>('list')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null)
-  const [rescheduleApt, setRescheduleApt] = useState<Appointment | null>(null)
-  const [rescheduleDate, setRescheduleDate] = useState('')
-  const [rescheduleTime, setRescheduleTime] = useState('')
 
-  const statuses = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled']
+  const statuses = ['All', 'Pending', 'Confirmed', 'Completed', 'Rejected', 'Cancelled']
 
-  const filtered = allAppointments.filter((a) => {
-    const matchSearch = a.patientName.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === 'All' || a.status === statusFilter
+  async function loadAppointments() {
+    setLoading(true)
+    try {
+      const res = await appointmentService.getDoctorAppointments()
+      setAppointments(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : [])
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to load appointments')
+      setAppointments([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAppointments()
+  }, [])
+
+  const filtered = appointments.filter((a) => {
+    const matchSearch = (a.patient_name || a.patientName || '').toLowerCase().includes(search.toLowerCase())
+    const matchStatus = statusFilter === 'All' || a.status === statusFilter.toLowerCase()
     return matchSearch && matchStatus
   })
 
-  const handleAccept = (id: number) => {
-    console.log('Accept', id)
-  }
-  const handleReject = (id: number) => {
-    console.log('Reject', id)
-  }
-  const handleCancel = (id: number) => {
-    console.log('Cancel', id)
+  async function handleAction(id: number, action: 'accept' | 'reject' | 'complete') {
+    setActing(id)
+    try {
+      if (action === 'accept') await appointmentService.acceptAppointment(id)
+      else if (action === 'reject') await appointmentService.rejectAppointment(id)
+      else await appointmentService.completeAppointment(id)
+      toast.success(`Appointment ${action}ed`)
+      await loadAppointments()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || `Failed to ${action} appointment`)
+    } finally {
+      setActing(null)
+    }
   }
 
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
@@ -81,7 +97,7 @@ export default function AppointmentsPage() {
 
   const getAppointmentsForDay = (day: number) => {
     const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return allAppointments.filter((a) => a.date === dateStr)
+    return filtered.filter((a) => a.date === dateStr)
   }
 
   return (
@@ -92,7 +108,12 @@ export default function AppointmentsPage() {
         <main className="p-4 lg:p-8 space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointments</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Appointments</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {appointments.length} total · {appointments.filter((a) => a.status === 'pending').length} pending
+                </p>
+              </div>
               <div className="flex items-center gap-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-1">
                 <button
                   onClick={() => setView('list')}
@@ -138,12 +159,19 @@ export default function AppointmentsPage() {
             </div>
           </motion.div>
 
-          {view === 'list' ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
+          {loading && (
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-3" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && view === 'list' && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
               {filtered.map((apt, i) => (
                 <motion.div
                   key={apt.id}
@@ -155,12 +183,16 @@ export default function AppointmentsPage() {
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-emerald-400 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                        {apt.patientName.split(' ').map(n => n[0]).join('')}
+                        {(apt.patient_name || apt.patientName || 'P').split(' ').map((n) => n[0]).join('').slice(0, 2)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{apt.patientName}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{apt.age} yrs | {apt.gender} | {apt.type}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{apt.reason}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{apt.patient_name || apt.patientName || 'Patient'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{apt.reason || 'No reason provided'}</p>
+                        {apt.clinic && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> {apt.clinic}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-4 lg:flex-row flex-wrap">
@@ -175,44 +207,42 @@ export default function AppointmentsPage() {
                         </div>
                       </div>
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge(apt.status)}`}>
-                        {apt.status}
+                        {statusLabel(apt.status)}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        {apt.status === 'Pending' && (
+                        {apt.status === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleAccept(apt.id)}
-                              className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                              onClick={() => handleAction(apt.id, 'accept')}
+                              disabled={acting === apt.id}
+                              className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors disabled:opacity-50"
                               title="Accept"
                             >
-                              <CheckCircle className="w-4 h-4" />
+                              {acting === apt.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                             </button>
                             <button
-                              onClick={() => handleReject(apt.id)}
-                              className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                              onClick={() => handleAction(apt.id, 'reject')}
+                              disabled={acting === apt.id}
+                              className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50"
                               title="Reject"
                             >
-                              <XCircle className="w-4 h-4" />
+                              {acting === apt.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                             </button>
                           </>
                         )}
-                        {apt.status === 'Confirmed' && (
+                        {apt.status === 'confirmed' && (
                           <button
-                            onClick={() => handleCancel(apt.id)}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                            onClick={() => handleAction(apt.id, 'complete')}
+                            disabled={acting === apt.id}
+                            className="text-xs px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50 flex items-center gap-1"
                           >
-                            Cancel
+                            {acting === apt.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                            Complete
                           </button>
                         )}
                         <button
-                          onClick={() => { setRescheduleApt(apt); setRescheduleDate(''); setRescheduleTime('') }}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
-                        >
-                          Reschedule
-                        </button>
-                        <button
                           onClick={() => setSelectedApt(apt)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                          className="text-xs px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         >
                           Details
                         </button>
@@ -228,7 +258,9 @@ export default function AppointmentsPage() {
                 </div>
               )}
             </motion.div>
-          ) : (
+          )}
+
+          {!loading && view === 'calendar' && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -266,14 +298,14 @@ export default function AppointmentsPage() {
                           <div
                             key={apt.id}
                             className={`text-[10px] px-1 py-0.5 rounded truncate cursor-pointer ${
-                              apt.status === 'Confirmed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
-                              apt.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                              apt.status === 'Cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                              apt.status === 'confirmed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
+                              apt.status === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                              apt.status === 'rejected' || apt.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
                               'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                             }`}
                             onClick={() => setSelectedApt(apt)}
                           >
-                            {apt.time} {apt.patientName.split(' ')[0]}
+                            {apt.time} {(apt.patient_name || apt.patientName || 'P').split(' ')[0]}
                           </div>
                         ))}
                         {dayApts.length > 2 && (
@@ -313,11 +345,15 @@ export default function AppointmentsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-emerald-400 rounded-full flex items-center justify-center text-white text-lg font-bold">
-                          {selectedApt.patientName.split(' ').map(n => n[0]).join('')}
+                          {(selectedApt.patient_name || selectedApt.patientName || 'P').split(' ').map((n) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <p className="text-lg font-semibold text-gray-900 dark:text-white">{selectedApt.patientName}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{selectedApt.age} yrs | {selectedApt.gender}</p>
+                          <p className="text-lg font-semibold text-gray-900 dark:text-white">{selectedApt.patient_name || selectedApt.patientName || 'Patient'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadge(selectedApt.status)}`}>
+                              {statusLabel(selectedApt.status)}
+                            </span>
+                          </p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -329,96 +365,23 @@ export default function AppointmentsPage() {
                           <p className="text-xs text-gray-500 dark:text-gray-400">Time</p>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedApt.time}</p>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedApt.type}</p>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-block mt-1 ${statusBadge(selectedApt.status)}`}>{selectedApt.status}</span>
-                        </div>
+                        {selectedApt.clinic && (
+                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 col-span-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Clinic</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedApt.clinic}</p>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">{selectedApt.reason}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">{selectedApt.reason || 'Not provided'}</p>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medical Notes</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">{selectedApt.notes}</p>
-                      </div>
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 flex items-start gap-2">
-                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                        <p className="text-xs text-blue-700 dark:text-blue-300">
-                          Patient has been visiting for 2 years. Previous diagnoses include mild hypertension and seasonal allergies.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {rescheduleApt && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-                onClick={() => setRescheduleApt(null)}
-              >
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full shadow-2xl"
-                >
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">Reschedule Appointment</h2>
-                      <button onClick={() => setRescheduleApt(null)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <XCircle className="w-5 h-5 text-gray-400" />
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                      Reschedule for {rescheduleApt.patientName}
-                    </p>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Date</label>
-                        <input
-                          type="date"
-                          value={rescheduleDate}
-                          onChange={(e) => setRescheduleDate(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Time</label>
-                        <input
-                          type="time"
-                          value={rescheduleTime}
-                          onChange={(e) => setRescheduleTime(e.target.value)}
-                          className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div className="flex gap-3 pt-2">
-                        <button
-                          onClick={() => setRescheduleApt(null)}
-                          className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => { console.log('Reschedule', rescheduleApt.id, rescheduleDate, rescheduleTime); setRescheduleApt(null) }}
-                          disabled={!rescheduleDate || !rescheduleTime}
-                          className="flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                          Confirm
-                        </button>
-                      </div>
+                      {selectedApt.notes && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">{selectedApt.notes}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

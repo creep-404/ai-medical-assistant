@@ -16,6 +16,7 @@ from backend.schemas.medical import (
 from backend.auth.auth_handler import get_current_user
 from backend.ml.predict import predict_disease, get_disease_details
 from backend.ml.emergency_detector import check_emergency
+from backend.services.specialist_service import get_specialist_for_disease
 
 router = APIRouter()
 
@@ -87,6 +88,10 @@ def predict(
     if result.get("predicted_disease"):
         details = get_disease_details(result["predicted_disease"], db)
 
+    specialist_info = get_specialist_for_disease(
+        result.get("predicted_disease"), request.symptoms
+    )
+
     return PredictionResponse(
         id=prediction.id,
         predicted_disease=result.get("predicted_disease"),
@@ -105,6 +110,7 @@ def predict(
         medicines=(
             [MedicineResponse(**m) for m in details["medicines"]] if details else None
         ),
+        recommended_specialist=specialist_info["specialist"],
     )
 
 

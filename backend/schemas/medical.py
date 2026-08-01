@@ -5,9 +5,11 @@ from enum import Enum
 
 
 class AppointmentStatus(str, Enum):
-    scheduled = "scheduled"
-    cancelled = "cancelled"
+    pending = "pending"
+    confirmed = "confirmed"
+    rejected = "rejected"
     completed = "completed"
+    cancelled = "cancelled"
 
 
 class SymptomResponse(BaseModel):
@@ -78,6 +80,7 @@ class PredictionResponse(BaseModel):
     precautions: Optional[List[str]] = None
     when_to_see_doctor: Optional[str] = None
     medicines: Optional[List[MedicineResponse]] = None
+    recommended_specialist: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -88,6 +91,8 @@ class AppointmentCreate(BaseModel):
     date: date
     time: str
     reason: Optional[str] = None
+    notes: Optional[str] = None
+    clinic: Optional[str] = None
 
 
 class AppointmentUpdate(BaseModel):
@@ -96,6 +101,7 @@ class AppointmentUpdate(BaseModel):
     reason: Optional[str] = None
     status: Optional[AppointmentStatus] = None
     notes: Optional[str] = None
+    clinic: Optional[str] = None
 
 
 class AppointmentResponse(BaseModel):
@@ -107,10 +113,67 @@ class AppointmentResponse(BaseModel):
     status: AppointmentStatus
     reason: Optional[str] = None
     notes: Optional[str] = None
+    clinic: Optional[str] = None
     created_at: Optional[datetime] = None
+    patient_name: Optional[str] = None
+    doctor_name: Optional[str] = None
+    doctor_specialty: Optional[str] = None
+    doctor_hospital: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class GeocodeRequest(BaseModel):
+    city: str
+
+
+class GeocodeResponse(BaseModel):
+    lat: float
+    lng: float
+    display_name: Optional[str] = None
+
+
+class NearbySearchRequest(BaseModel):
+    lat: float
+    lng: float
+    radius_km: float = 5.0
+    place_type: Optional[str] = "all"
+    specialty: Optional[str] = None
+
+
+class NearbyPlaceResponse(BaseModel):
+    name: str
+    type: str
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    opening_hours: Optional[str] = None
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    lat: float
+    lng: float
+    distance_km: float = 0.0
+    is_registered: bool = False
+    doctor_id: Optional[int] = None
+    specialty: Optional[str] = None
+    hospital: Optional[str] = None
+
+
+class SpecialistResponse(BaseModel):
+    specialist: str
+    specialist_keywords: List[str] = []
+    reason: Optional[str] = None
+
+
+class AppointmentStatsResponse(BaseModel):
+    total: int = 0
+    pending: int = 0
+    confirmed: int = 0
+    rejected: int = 0
+    completed: int = 0
+    cancelled: int = 0
+    upcoming: int = 0
+    per_doctor: Optional[dict] = None
 
 
 class MedicineReminderCreate(BaseModel):

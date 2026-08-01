@@ -89,7 +89,7 @@ MediAssist AI is a production-ready healthcare web application that uses Machine
 - Logistic Regression
 
 ### Database
-PostgreSQL (via Supabase for deployment)
+PostgreSQL in production (Railway); SQLite for local development fallback.
 
 ---
 
@@ -138,9 +138,9 @@ mediassist-ai/
 ## Installation & Setup
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.10+
 - Node.js 18+
-- PostgreSQL 15+
+- PostgreSQL 15+ (optional — SQLite works locally out of the box)
 - npm or yarn
 
 ### 1. Clone the Repository
@@ -170,14 +170,14 @@ pip install -r requirements.txt
 cp ../.env.example .env
 # Edit .env with your database credentials
 
-# Train ML model
-python -m ml.train_model
+# (Optional) For a fresh database, run Alembic migrations:
+alembic upgrade head
 
-# Seed the database
-python -m database.seed_data
+# Seed the database (also runs automatically at first startup with SQLite)
+python -m backend.services.seed_service
 
 # Run the backend
-uvicorn main:app --reload
+python -m uvicorn backend.main:app --reload
 ```
 
 ### 3. Frontend Setup
@@ -343,25 +343,13 @@ If any emergency symptom is detected, the system displays an emergency alert and
 
 ## Deployment
 
-### Frontend (Vercel)
-```bash
-# Install Vercel CLI
-npm i -g vercel
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full, step-by-step production guide:
 
-# Deploy
-vercel
-```
-
-### Backend (Render)
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### Database (Supabase)
-1. Create a Supabase project
-2. Get your PostgreSQL connection string
-3. Add to environment variables
+- **Frontend** → Vercel (`https://mediassist.dpdns.org`)
+- **Backend** → Railway (`https://api.mediassist.dpdns.org`)
+- **Database** → PostgreSQL (Railway plugin), with SQLite as a local-only fallback
+- Alembic migrations, environment variables, custom domains, and the exact DNS records
+  are all covered there.
 
 ---
 

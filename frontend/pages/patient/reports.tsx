@@ -37,7 +37,7 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const res = await medicalService.getReports();
-      setReports(res.data || []);
+      setReports(Array.isArray(res.data) ? res.data : Array.isArray(res) ? res : []);
     } catch {
       setReports([]);
     } finally {

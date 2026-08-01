@@ -4,6 +4,20 @@ from backend.models.medical import Symptom, Disease, Medicine, disease_symptom_a
 from backend.models.user import User, DoctorProfile, UserRole
 from backend.auth.auth_handler import hash_password
 
+# Approximate coordinates (New Delhi area) so registered doctors appear on the nearby map.
+DOCTOR_COORDS = {
+    "dr.smith": (28.6139, 77.2090),
+    "dr.jones": (28.6315, 77.2167),
+    "dr.patel": (28.6010, 77.2130),
+    "dr.wilson": (28.5979, 77.1950),
+    "dr.garcia": (28.6269, 77.2220),
+    "dr.chen": (28.6079, 77.1987),
+    "dr.thompson": (28.6399, 77.2260),
+    "dr.kumar": (28.6200, 77.2135),
+    "dr.brown": (28.6045, 77.2050),
+    "dr.lee": (28.6290, 77.2180),
+}
+
 
 def seed_symptoms(db: Session):
     symptoms_data = [
@@ -581,6 +595,7 @@ def seed_doctors(db: Session):
             user = User(**user_data)
             db.add(user)
             db.flush()
+            coords = DOCTOR_COORDS.get(doc_data["username"])
             profile = DoctorProfile(
                 user_id=user.id,
                 specialty=doc_data["specialty"],
@@ -595,6 +610,8 @@ def seed_doctors(db: Session):
                 is_verified=True,
                 bio=doc_data["bio"],
                 rating=4.5,
+                lat=coords[0] if coords else None,
+                lng=coords[1] if coords else None,
             )
             db.add(profile)
 

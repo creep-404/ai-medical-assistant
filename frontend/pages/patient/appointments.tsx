@@ -21,21 +21,32 @@ const tabs: Tab[] = ['Upcoming', 'Past', 'All'];
 
 function statusBadge(status: string) {
   switch (status) {
-    case 'Scheduled':
-      return 'bg-blue-100 text-blue-700 border-blue-200';
-    case 'Completed':
+    case 'pending':
+      return 'bg-amber-100 text-amber-700 border-amber-200';
+    case 'confirmed':
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    case 'rejected':
+      return 'bg-red-100 text-red-700 border-red-200';
+    case 'completed':
       return 'bg-green-100 text-green-700 border-green-200';
-    case 'Cancelled':
+    case 'cancelled':
       return 'bg-red-100 text-red-700 border-red-200';
     default:
       return 'bg-gray-100 text-gray-700 border-gray-200';
   }
 }
 
+function statusLabel(status: string) {
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+}
+
 interface Appointment {
   id: number;
   doctorName: string;
+  doctor_name?: string;
+  doctor_specialty?: string;
   specialty: string;
+  clinic?: string;
   date: string;
   time: string;
   status: string;
@@ -82,8 +93,8 @@ export default function AppointmentsPage() {
 
   const filteredAppointments = appointments.filter((a) => {
     if (activeTab === 'All') return true;
-    if (activeTab === 'Upcoming') return a.status === 'Scheduled';
-    return a.status === 'Completed' || a.status === 'Cancelled';
+    if (activeTab === 'Upcoming') return a.status === 'pending' || a.status === 'confirmed';
+    return a.status === 'completed' || a.status === 'cancelled' || a.status === 'rejected';
   });
 
   async function handleBook() {
@@ -217,12 +228,12 @@ export default function AppointmentsPage() {
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-                        {appt.doctorName?.charAt(0) || 'D'}
+                        {(appt.doctor_name || appt.doctorName || 'D').charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-gray-900">{appt.doctorName || 'Doctor'}</h3>
-                          <span className="text-sm text-gray-500">• {appt.specialty || 'General'}</span>
+                          <h3 className="font-semibold text-gray-900">{appt.doctor_name || appt.doctorName || 'Doctor'}</h3>
+                          <span className="text-sm text-gray-500">• {appt.doctor_specialty || appt.specialty || 'General'}</span>
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
@@ -238,10 +249,10 @@ export default function AppointmentsPage() {
                       <span
                         className={`text-xs font-semibold px-3 py-1.5 rounded-full border shrink-0 ${statusBadge(appt.status)}`}
                       >
-                        {appt.status}
+                        {statusLabel(appt.status)}
                       </span>
                     </div>
-                    {appt.status === 'Scheduled' && (
+                    {(appt.status === 'pending' || appt.status === 'confirmed') && (
                       <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
                         <button
                           onClick={() => setShowReschedule(appt)}
@@ -278,7 +289,7 @@ export default function AppointmentsPage() {
                       <option value="">Select a doctor</option>
                       {doctors.map((d: any) => (
                         <option key={d.id} value={d.id}>
-                          {d.name} - {d.specialty}
+                          {d.user?.full_name || d.name} - {d.specialty}
                         </option>
                       ))}
                     </select>
@@ -338,7 +349,7 @@ export default function AppointmentsPage() {
               <Modal onClose={() => setShowReschedule(null)} title="Reschedule Appointment">
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600">
-                    Rescheduling appointment with <strong>{showReschedule.doctorName}</strong>
+                    Rescheduling appointment with <strong>{showReschedule.doctor_name || showReschedule.doctorName}</strong>
                   </p>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>

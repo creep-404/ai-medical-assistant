@@ -6,9 +6,11 @@ from backend.database.database import Base
 
 
 class AppointmentStatus(str, enum.Enum):
-    scheduled = "scheduled"
-    cancelled = "cancelled"
+    pending = "pending"
+    confirmed = "confirmed"
+    rejected = "rejected"
     completed = "completed"
+    cancelled = "cancelled"
 
 
 disease_symptom_association = Table(
@@ -96,9 +98,10 @@ class Appointment(Base):
     doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     date = Column(Date, nullable=False)
     time = Column(String(10), nullable=False)
-    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.scheduled)
+    status = Column(Enum(AppointmentStatus, name="appointmentstatus"), default=AppointmentStatus.pending)
     reason = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
+    clinic = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     patient = relationship("User", back_populates="appointments_as_patient", foreign_keys=[patient_id])

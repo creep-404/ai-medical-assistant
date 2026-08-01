@@ -6,6 +6,8 @@ export const appointmentService = {
     date: string;
     time: string;
     reason: string;
+    notes?: string;
+    clinic?: string;
   }) {
     const response = await api.post('/api/appointments', data);
     return response.data;
@@ -38,6 +40,31 @@ export const appointmentService = {
 
   async getDoctorAppointments() {
     const response = await api.get('/api/appointments/doctor');
+    return response.data;
+  },
+
+  async acceptAppointment(id: number) {
+    const response = await api.post(`/api/appointments/${id}/accept`);
+    return response.data;
+  },
+
+  async rejectAppointment(id: number) {
+    const response = await api.post(`/api/appointments/${id}/reject`);
+    return response.data;
+  },
+
+  async completeAppointment(id: number) {
+    const response = await api.post(`/api/appointments/${id}/complete`);
+    return response.data;
+  },
+
+  async getAllAppointments() {
+    const response = await api.get('/api/appointments/all');
+    return response.data;
+  },
+
+  async getAppointmentStats() {
+    const response = await api.get('/api/appointments/stats');
     return response.data;
   },
 
