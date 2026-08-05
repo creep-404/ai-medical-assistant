@@ -47,6 +47,9 @@ MediAssist AI is a production-ready healthcare web application that uses Machine
 - Emergency contacts
 - Health timeline
 
+### UI / Design System
+The frontend was redesigned with a modern, healthcare-focused UI inspired by Maven Clinic — a teal/cream/ink/amber palette with Fraunces display typography, soft shadows, and rounded cards. A reusable component kit lives in `frontend/components/ui/`, and shared app shells (patient/doctor/admin/auth layouts) live in `frontend/components/layout/`. Backend, business logic, services, and data flows are unchanged.
+
 ---
 
 ## Tech Stack
@@ -99,6 +102,9 @@ PostgreSQL in production (Railway); SQLite for local development fallback.
 mediassist-ai/
 ├── frontend/                    # Next.js application
 │   ├── components/
+│   │   ├── ui/                 # Design system kit (Button, Card, Form, Badge,
+│   │   │                       #  Avatar, Modal, Table, StatCard, Logo, Disclaimer, Feedback)
+│   │   ├── layout/             # AppShell + Patient/Doctor/Admin/Auth layouts
 │   │   ├── patient/            # Patient dashboard components
 │   │   ├── doctor/             # Doctor dashboard components
 │   │   └── admin/              # Admin dashboard components
@@ -111,7 +117,8 @@ mediassist-ai/
 │   │   ├── patient/            # Patient pages
 │   │   ├── doctor/             # Doctor pages
 │   │   └── admin/              # Admin pages
-│   ├── hooks/                  # Custom React hooks
+│   ├── hooks/                  # Custom React hooks (useAuth, useTheme, useMounted, useApi)
+│   ├── lib/                    # Utilities (cn, navigation)
 │   ├── services/               # API service layer
 │   ├── styles/                 # Global styles
 │   └── public/                 # Static assets
