@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import {
   Search,
   X,
@@ -19,9 +20,13 @@ import {
   Thermometer,
   Heart,
   MapPin,
+  Sparkles,
 } from 'lucide-react';
-import PatientSidebar from '@/components/patient/PatientSidebar';
-import PatientHeader from '@/components/patient/PatientHeader';
+import { PatientLayout } from '@/components/layout/PatientLayout';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
 import { medicalService } from '@/services/medical.service';
 import { nearbyService } from '@/services/nearby.service';
 
@@ -55,7 +60,6 @@ const symptomCategories = [
 const allSymptoms = symptomCategories.flatMap((c) => c.symptoms);
 
 export default function SymptomCheckerPage() {
-  const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [predicting, setPredicting] = useState(false);
@@ -223,396 +227,400 @@ export default function SymptomCheckerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PatientSidebar />
-      <PatientHeader onToggleDark={() => setIsDark(!isDark)} isDark={isDark} />
+    <PatientLayout>
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <p className="text-sm font-medium text-primary-600 dark:text-primary-300">AI Analysis</p>
+        <h1 className="heading-display text-3xl font-semibold text-ink-900 dark:text-cream-100 mt-1">
+          Symptom Checker
+        </h1>
+        <p className="mt-1.5 text-ink-500 dark:text-cream-300/70">
+          Select your symptoms to get a possible diagnosis
+        </p>
+      </motion.div>
 
-      <main className="lg:pl-72">
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900">Symptom Checker</h1>
-            <p className="text-gray-500 mt-1">Select your symptoms to get a possible diagnosis</p>
-          </motion.div>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-400 dark:text-cream-300/50" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search symptoms..."
+          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-ink-900 border border-cream-200 dark:border-ink-800 rounded-xl text-sm text-ink-900 dark:text-cream-100 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-transparent shadow-soft"
+        />
+      </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search symptoms..."
-              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Selected Symptoms */}
-          <AnimatePresence>
-            {selectedSymptoms.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex flex-wrap gap-2"
+      {/* Selected Symptoms */}
+      <AnimatePresence>
+        {selectedSymptoms.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex flex-wrap items-center gap-2"
+          >
+            {selectedSymptoms.map((s) => (
+              <motion.span
+                key={s}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-200 rounded-full text-sm font-medium border border-primary-200 dark:border-primary-800"
               >
-                {selectedSymptoms.map((s) => (
-                  <motion.span
-                    key={s}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-200"
-                  >
-                    {s}
-                    <button onClick={() => toggleSymptom(s)} className="hover:bg-blue-100 rounded-full p-0.5">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </motion.span>
-                ))}
-                <button
-                  onClick={() => setSelectedSymptoms([])}
-                  className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  Clear all
+                {s}
+                <button onClick={() => toggleSymptom(s)} className="hover:bg-primary-100 dark:hover:bg-primary-900/60 rounded-full p-0.5 transition-colors">
+                  <X className="h-3.5 w-3.5" />
                 </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </motion.span>
+            ))}
+            <button
+              onClick={() => setSelectedSymptoms([])}
+              className="px-3 py-1.5 text-sm text-ink-400 dark:text-cream-300/60 hover:text-ink-700 dark:hover:text-cream-100 hover:bg-cream-100 dark:hover:bg-ink-800 rounded-full transition-colors"
+            >
+              Clear all
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Symptom Grid */}
-          <div className="space-y-6">
-            {(searchQuery ? filteredCategories : categories).map((category) => (
-              <div key={category.name}>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{category.name}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {category.symptoms.map((symptom) => (
-                    <motion.button
-                      key={symptom}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => toggleSymptom(symptom)}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
-                        selectedSymptoms.includes(symptom)
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                      }`}
+      {/* Symptom Grid */}
+      <div className="space-y-6">
+        {(searchQuery ? filteredCategories : categories).map((category) => (
+          <div key={category.name}>
+            <h3 className="text-sm font-semibold text-ink-400 dark:text-cream-300/60 uppercase tracking-wider mb-3">
+              {category.name}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {category.symptoms.map((symptom) => (
+                <motion.button
+                  key={symptom}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => toggleSymptom(symptom)}
+                  className={cn(
+                    'px-4 py-2 rounded-xl text-sm font-medium border transition-all',
+                    selectedSymptoms.includes(symptom)
+                      ? 'bg-primary-600 text-white border-primary-600 shadow-md'
+                      : 'bg-white dark:bg-ink-900 text-ink-700 dark:text-cream-200 border-cream-200 dark:border-ink-700 hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900/30'
+                  )}
+                >
+                  {symptom}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Check Button */}
+      <div className="flex items-center gap-3">
+        <Button
+          onClick={handleCheckSymptoms}
+          disabled={selectedSymptoms.length === 0}
+          loading={predicting}
+          size="lg"
+        >
+          {predicting ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-5 w-5" />
+              Check Symptoms
+            </>
+          )}
+        </Button>
+        {selectedSymptoms.length > 0 && (
+          <span className="text-sm text-ink-400 dark:text-cream-300/60">
+            {selectedSymptoms.length} symptom{selectedSymptoms.length > 1 ? 's' : ''} selected
+          </span>
+        )}
+      </div>
+
+      {/* Emergency Alert */}
+      <AnimatePresence>
+        {showEmergency && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-sm"
+          >
+            <motion.div className="bg-white dark:bg-ink-900 rounded-2xl max-w-lg w-full p-6 shadow-lift border border-red-200 dark:border-red-900 max-h-[90vh] overflow-y-auto">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h2 className="text-xl font-bold text-red-700 dark:text-red-400 text-center mb-2">
+                ⚠ Emergency Detected
+              </h2>
+              <p className="text-ink-600 dark:text-cream-300 text-center leading-relaxed mb-6">
+                Your symptoms may indicate a serious medical condition. Please visit the nearest hospital or consult a
+                licensed doctor immediately.
+              </p>
+
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-ink-900 dark:text-cream-100 mb-2 flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-red-600" /> Nearest Hospitals
+                </h3>
+                {loadingHospitals ? (
+                  <div className="flex items-center justify-center py-4 text-ink-500 dark:text-cream-300/70 text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Locating hospitals...
+                  </div>
+                ) : emergencyHospitals.length > 0 ? (
+                  <div className="space-y-2">
+                    {emergencyHospitals.map((h: any, i: number) => (
+                      <div
+                        key={i}
+                        className="block p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-ink-900 dark:text-cream-100">{h.name}</p>
+                          <span className="text-xs font-medium text-red-700 dark:text-red-300 shrink-0">
+                            {h.distance_km != null ? `${h.distance_km} km` : 'Distance unknown'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-ink-500 dark:text-cream-300/70 mt-0.5 line-clamp-1">
+                          {h.address && h.address !== 'Address not available' ? h.address : 'Address unavailable'}
+                          {h.lat != null && h.lng != null ? ` (${h.lat.toFixed(4)}, ${h.lng.toFixed(4)})` : ''}
+                        </p>
+                        <div className="flex items-center justify-between mt-1.5">
+                          {h.phone ? (
+                            <a href={`tel:${String(h.phone).replace(/[^0-9+]/g, '')}`} className="text-xs text-primary-700 dark:text-primary-300 font-medium hover:underline">
+                              📞 {h.phone}
+                            </a>
+                          ) : (
+                            <span className="text-xs text-ink-400 dark:text-cream-300/50">Phone unavailable</span>
+                          )}
+                          {h.website && (
+                            <a href={h.website} target="_blank" rel="noreferrer" className="text-xs text-primary-700 dark:text-primary-300 font-medium hover:underline">
+                              Visit Website ↗
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-cream-100 dark:bg-ink-800 rounded-xl p-3">
+                    {hospitalError ? (
+                      <p className="text-sm text-red-600 dark:text-red-400">{hospitalError}</p>
+                    ) : (
+                      <p className="text-sm text-ink-500 dark:text-cream-300/70">
+                        Hospital list unavailable. Call Emergency Services immediately.
+                      </p>
+                    )}
+                    <button
+                      onClick={findNearestHospitals}
+                      className="mt-3 w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                     >
-                      {symptom}
-                    </motion.button>
+                      <Loader2 className={`h-4 w-4 ${loadingHospitals ? 'animate-spin' : 'hidden'}`} />
+                      Retry Search
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-ink-900 dark:text-cream-100 mb-2">Emergency Contacts</h3>
+                <div className="space-y-2">
+                  {emergencyContacts.map((c) => (
+                    <a
+                      key={c.name}
+                      href={`tel:${c.number.replace(/[^0-9+]/g, '')}`}
+                      className="flex items-center justify-between p-3 bg-cream-100 dark:bg-ink-800 rounded-xl hover:bg-cream-200 dark:hover:bg-ink-700 transition-colors"
+                    >
+                      <span className="text-sm text-ink-700 dark:text-cream-200">{c.name}</span>
+                      <span className="text-sm font-bold text-red-700 dark:text-red-400">{c.number}</span>
+                    </a>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Check Button */}
-          <div className="flex items-center gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleCheckSymptoms}
-              disabled={selectedSymptoms.length === 0 || predicting}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-            >
-              {predicting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Activity className="w-5 h-5" />
-                  Check Symptoms
-                </>
-              )}
-            </motion.button>
-            {selectedSymptoms.length > 0 && (
-              <span className="text-sm text-gray-500">{selectedSymptoms.length} symptom{selectedSymptoms.length > 1 ? 's' : ''} selected</span>
-            )}
-          </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => { setShowEmergency(false); handleReset(); }}
+                >
+                  Clear & Start Over
+                </Button>
+                <Button variant="danger" className="flex-1" onClick={() => setShowEmergency(false)}>
+                  I Understand
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {/* Emergency Alert */}
-          <AnimatePresence>
-            {showEmergency && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-              >
-                <motion.div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-red-200 max-h-[90vh] overflow-y-auto">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                    <AlertTriangle className="w-8 h-8 text-red-600" />
+      {/* Result Card */}
+      <AnimatePresence>
+        {result && !result.error && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+          >
+            <Card className="overflow-hidden">
+              <div className="p-6 border-b border-cream-200 dark:border-ink-800">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                    <Stethoscope className="h-6 w-6 text-primary-600 dark:text-primary-300" />
                   </div>
-                  <h2 className="text-xl font-bold text-red-700 text-center mb-2">⚠ Emergency Detected</h2>
-                  <p className="text-gray-700 text-center leading-relaxed mb-6">
-                    Your symptoms may indicate a serious medical condition. Please visit the nearest hospital or consult a
-                    licensed doctor immediately.
-                  </p>
-
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-red-600" /> Nearest Hospitals
-                    </h3>
-                    {loadingHospitals ? (
-                      <div className="flex items-center justify-center py-4 text-gray-500 text-sm">
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> Locating hospitals...
-                      </div>
-                    ) : emergencyHospitals.length > 0 ? (
-                      <div className="space-y-2">
-                        {emergencyHospitals.map((h: any, i: number) => (
-                          <a
-                            key={i}
-                            href={h.website || '#'}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block p-3 bg-red-50 rounded-xl border border-red-100 hover:bg-red-100 transition-colors"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-semibold text-gray-900">{h.name}</p>
-                              <span className="text-xs font-medium text-red-700 shrink-0">
-                                {h.distance_km != null ? `${h.distance_km} km` : 'Distance unknown'}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">
-                              {h.address && h.address !== 'Address not available' ? h.address : 'Address unavailable'}
-                              {h.lat != null && h.lng != null ? ` (${h.lat.toFixed(4)}, ${h.lng.toFixed(4)})` : ''}
-                            </p>
-                            <div className="flex items-center justify-between mt-1.5">
-                              {h.phone ? (
-                                <a href={`tel:${String(h.phone).replace(/[^0-9+]/g, '')}`} className="text-xs text-blue-700 font-medium hover:underline">
-                                  📞 {h.phone}
-                                </a>
-                              ) : (
-                                <span className="text-xs text-gray-400">Phone unavailable</span>
-                              )}
-                              {h.website && <span className="text-xs text-gray-400">Website available</span>}
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        {hospitalError ? (
-                          <p className="text-sm text-red-600">{hospitalError}</p>
-                        ) : (
-                          <p className="text-sm text-gray-500">Hospital list unavailable. Call Emergency Services immediately.</p>
-                        )}
-                        <button
-                          onClick={findNearestHospitals}
-                          className="mt-3 w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium text-sm hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Loader2 className={`w-4 h-4 ${loadingHospitals ? 'animate-spin' : 'hidden'}`} />
-                          Retry Search
-                        </button>
-                      </div>
-                    )}
+                  <div>
+                    <p className="text-sm text-ink-400 dark:text-cream-300/60">Predicted Condition</p>
+                    <h2 className="text-2xl font-bold text-ink-900 dark:text-cream-100">
+                      {result.disease || result.predictedDisease}
+                    </h2>
                   </div>
+                </div>
 
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-2">Emergency Contacts</h3>
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-ink-700 dark:text-cream-200">Confidence Score</span>
+                    <span className="text-sm font-bold text-primary-700 dark:text-primary-300">
+                      {Math.round(result.confidence || 0)}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2.5 bg-cream-100 dark:bg-ink-800 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${result.confidence || 0}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className={cn(
+                        'h-full rounded-full',
+                        (result.confidence || 0) >= 80
+                          ? 'bg-secondary-500'
+                          : (result.confidence || 0) >= 50
+                          ? 'bg-accent-500'
+                          : 'bg-red-500'
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {result.specialist && (
+                  <div className="flex items-center justify-between gap-3 p-3 bg-secondary-50 dark:bg-secondary-900/30 border border-secondary-200 dark:border-secondary-800 rounded-xl">
+                    <div className="flex items-center gap-2">
+                      <Stethoscope className="h-4 w-4 text-secondary-600 dark:text-secondary-300" />
+                      <span className="text-sm font-medium text-secondary-800 dark:text-secondary-200">
+                        Recommended Specialist
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-secondary-700 dark:text-secondary-300">{result.specialist}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 space-y-6">
+                {result.possibleCauses && (
+                  <Section icon={AlertTriangle} title="Possible Causes">
+                    <ul className="list-disc list-inside text-sm text-ink-700 dark:text-cream-200 space-y-1">
+                      {result.possibleCauses.map((c: string, i: number) => <li key={i}>{c}</li>)}
+                    </ul>
+                  </Section>
+                )}
+
+                {result.medicines && (
+                  <Section icon={Pill} title="Recommended OTC Medicines">
                     <div className="space-y-2">
-                      {emergencyContacts.map((c) => (
-                        <a
-                          key={c.name}
-                          href={`tel:${c.number.replace(/[^0-9+]/g, '')}`}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                        >
-                          <span className="text-sm text-gray-700">{c.name}</span>
-                          <span className="text-sm font-bold text-red-700">{c.number}</span>
-                        </a>
+                      {result.medicines.map((m: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-primary-50 dark:bg-primary-900/30 rounded-xl">
+                          <span className="font-medium text-ink-900 dark:text-cream-100">{m.name}</span>
+                          <span className="text-sm text-ink-500 dark:text-cream-300/70">{m.dosage}</span>
+                        </div>
                       ))}
                     </div>
-                  </div>
+                  </Section>
+                )}
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => { setShowEmergency(false); handleReset(); }}
-                      className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-                    >
-                      Clear & Start Over
-                    </button>
-                    <button
-                      onClick={() => setShowEmergency(false)}
-                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
-                    >
-                      I Understand
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {result.homeRemedies && (
+                  <Section icon={Heart} title="Home Remedies">
+                    <ul className="list-disc list-inside text-sm text-ink-700 dark:text-cream-200 space-y-1">
+                      {result.homeRemedies.map((r: string, i: number) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </Section>
+                )}
 
-          {/* Result Card */}
-          <AnimatePresence>
-            {result && !result.error && (
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-              >
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Stethoscope className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Predicted Condition</p>
-                      <h2 className="text-2xl font-bold text-gray-900">{result.disease || result.predictedDisease}</h2>
-                    </div>
-                  </div>
+                {result.dietSuggestions && (
+                  <Section icon={Apple} title="Diet Suggestions">
+                    <ul className="list-disc list-inside text-sm text-ink-700 dark:text-cream-200 space-y-1">
+                      {result.dietSuggestions.map((d: string, i: number) => <li key={i}>{d}</li>)}
+                    </ul>
+                  </Section>
+                )}
 
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-gray-700">Confidence Score</span>
-                      <span className="text-sm font-bold text-blue-700">{Math.round(result.confidence || 0)}%</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${result.confidence || 0}%` }}
-                        transition={{ duration: 1, ease: 'easeOut' }}
-                        className={`h-full rounded-full ${
-                          (result.confidence || 0) >= 80
-                            ? 'bg-green-500'
-                            : (result.confidence || 0) >= 50
-                            ? 'bg-yellow-500'
-                            : 'bg-red-500'
-                        }`}
-                      />
-                    </div>
-                  </div>
+                {result.hydrationAdvice && (
+                  <Section icon={Droplets} title="Hydration Advice">
+                    <p className="text-sm text-ink-700 dark:text-cream-200">{result.hydrationAdvice}</p>
+                  </Section>
+                )}
 
-                  {result.specialist && (
-                    <div className="flex items-center justify-between gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                      <div className="flex items-center gap-2">
-                        <Stethoscope className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-medium text-emerald-800">Recommended Specialist</span>
-                      </div>
-                      <span className="text-sm font-bold text-emerald-700">{result.specialist}</span>
-                    </div>
-                  )}
-                </div>
+                {result.recoveryTime && (
+                  <Section icon={Bed} title="Recovery Time">
+                    <p className="text-sm text-ink-700 dark:text-cream-200">{result.recoveryTime}</p>
+                  </Section>
+                )}
 
-                <div className="p-6 space-y-6">
-                  {result.possibleCauses && (
-                    <Section icon={AlertTriangle} title="Possible Causes">
-                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        {result.possibleCauses.map((c: string, i: number) => <li key={i}>{c}</li>)}
-                      </ul>
-                    </Section>
-                  )}
+                {result.precautions && (
+                  <Section icon={Shield} title="Precautions">
+                    <ul className="list-disc list-inside text-sm text-ink-700 dark:text-cream-200 space-y-1">
+                      {result.precautions.map((p: string, i: number) => <li key={i}>{p}</li>)}
+                    </ul>
+                  </Section>
+                )}
 
-                  {result.medicines && (
-                    <Section icon={Pill} title="Recommended OTC Medicines">
-                      <div className="space-y-2">
-                        {result.medicines.map((m: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                            <span className="font-medium text-gray-900">{m.name}</span>
-                            <span className="text-sm text-gray-500">{m.dosage}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </Section>
-                  )}
+                {result.whenToVisitDoctor && (
+                  <Section icon={Thermometer} title="When to Visit Doctor">
+                    <p className="text-sm text-ink-700 dark:text-cream-200">{result.whenToVisitDoctor}</p>
+                  </Section>
+                )}
+              </div>
 
-                  {result.homeRemedies && (
-                    <Section icon={Heart} title="Home Remedies">
-                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        {result.homeRemedies.map((r: string, i: number) => <li key={i}>{r}</li>)}
-                      </ul>
-                    </Section>
-                  )}
-
-                  {result.dietSuggestions && (
-                    <Section icon={Apple} title="Diet Suggestions">
-                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        {result.dietSuggestions.map((d: string, i: number) => <li key={i}>{d}</li>)}
-                      </ul>
-                    </Section>
-                  )}
-
-                  {result.hydrationAdvice && (
-                    <Section icon={Droplets} title="Hydration Advice">
-                      <p className="text-sm text-gray-700">{result.hydrationAdvice}</p>
-                    </Section>
-                  )}
-
-                  {result.recoveryTime && (
-                    <Section icon={Bed} title="Recovery Time">
-                      <p className="text-sm text-gray-700">{result.recoveryTime}</p>
-                    </Section>
-                  )}
-
-                  {result.precautions && (
-                    <Section icon={Shield} title="Precautions">
-                      <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                        {result.precautions.map((p: string, i: number) => <li key={i}>{p}</li>)}
-                      </ul>
-                    </Section>
-                  )}
-
-                  {result.whenToVisitDoctor && (
-                    <Section icon={Thermometer} title="When to Visit Doctor">
-                      <p className="text-sm text-gray-700">{result.whenToVisitDoctor}</p>
-                    </Section>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="px-6 pb-6 flex flex-wrap gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleDownloadReport}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Generate Report
-                  </motion.button>
-                  <motion.a
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    href={`/patient/nearby-doctors?disease=${encodeURIComponent(result.disease || '')}&specialist=${encodeURIComponent(result.specialist || '')}`}
-                    className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                  >
-                    <MapPin className="w-4 h-4" />
+              {/* Action Buttons */}
+              <div className="px-6 pb-6 flex flex-wrap gap-3">
+                <Button onClick={handleDownloadReport}>
+                  <Download className="h-4 w-4" />
+                  Generate Report
+                </Button>
+                <Link
+                  href={`/patient/nearby-doctors?disease=${encodeURIComponent(result.disease || '')}&specialist=${encodeURIComponent(result.specialist || '')}`}
+                >
+                  <Button variant="secondary">
+                    <MapPin className="h-4 w-4" />
                     Find Nearby Doctors
-                  </motion.a>
-                  <motion.a
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    href="/patient/appointments"
-                    className="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-                  >
-                    <Calendar className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/patient/appointments">
+                  <Button variant="outline">
+                    <Calendar className="h-4 w-4" />
                     Book Appointment
-                  </motion.a>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {result?.error && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-700 text-sm">
-              {result.error}
-            </div>
-          )}
-
-          {/* Disclaimer */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 leading-relaxed">
-              This application is intended for educational purposes only. It does not replace professional medical
-              advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical
-              conditions.
-            </p>
-          </div>
+      {result?.error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 text-red-700 dark:text-red-300 text-sm">
+          {result.error}
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* Disclaimer */}
+      <div className="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-2xl p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-accent-600 dark:text-accent-300 shrink-0 mt-0.5" />
+        <p className="text-sm text-accent-800 dark:text-accent-200 leading-relaxed">
+          This application is intended for educational purposes only. It does not replace professional medical
+          advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical
+          conditions.
+        </p>
+      </div>
+    </PatientLayout>
   );
 }
 
@@ -628,8 +636,8 @@ function Section({
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-4 h-4 text-blue-600" />
-        <h3 className="font-semibold text-gray-900">{title}</h3>
+        <Icon className="h-4 w-4 text-primary-600 dark:text-primary-300" />
+        <h3 className="font-semibold text-ink-900 dark:text-cream-100">{title}</h3>
       </div>
       {children}
     </div>

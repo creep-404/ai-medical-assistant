@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Lock, Eye, EyeOff, Loader2, ArrowLeft, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react'
+import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react'
 import { authService } from '@/services/auth.service'
 import toast from 'react-hot-toast'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { Button } from '@/components/ui/Button'
+import { Field, Input, Label, FieldError } from '@/components/ui/Form'
+import { cn } from '@/lib/cn'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -57,173 +61,155 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invalid Reset Link</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              This password reset link is invalid or has expired. Please request a new one.
-            </p>
-            <Link
-              href="/forgot-password"
-              className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline font-medium"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Request new reset link
-            </Link>
+      <AuthLayout
+        icon={AlertCircle}
+        headline="Something went wrong"
+        description="We couldn't verify your reset link. Please request a new one and try again."
+        stats={[
+          { value: 'Secure', label: 'Encrypted Reset Link' },
+          { value: 'Fast', label: 'Arrives in Seconds' },
+          { value: '24/7', label: 'Support' },
+        ]}
+      >
+        <div className="card p-8 text-center">
+          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-5">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-        </motion.div>
-      </div>
+          <h1 className="heading-display text-2xl font-semibold text-ink-900 dark:text-cream-100 mb-2">
+            Invalid reset link
+          </h1>
+          <p className="text-ink-500 dark:text-cream-400/70 mb-6">
+            This password reset link is invalid or has expired. Please request a new one.
+          </p>
+          <Link
+            href="/forgot-password"
+            className="inline-flex items-center gap-2 text-primary-700 dark:text-primary-300 hover:underline font-semibold"
+          >
+            Request new reset link
+          </Link>
+        </div>
+      </AuthLayout>
     )
   }
 
+  const errorClass = (hasError: boolean | string | undefined) =>
+    hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/30' : ''
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Link
-          href="/"
-          className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mb-8 transition-colors"
+    <AuthLayout
+      icon={Lock}
+      headline="Set a strong new password"
+      description="Choose a new password to secure your account. Keep it unique and easy for you to remember."
+      stats={[
+        { value: '6+', label: 'Min Characters' },
+        { value: 'Secure', label: 'Encrypted' },
+        { value: '24/7', label: 'Support' },
+      ]}
+    >
+      {success ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Link>
-
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          {success ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
-            >
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Password Reset Successful!
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Your password has been updated successfully.
-              </p>
-              <Link
-                href="/login"
-                className="inline-block py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200"
-              >
-                Sign In with New Password
-              </Link>
-            </motion.div>
-          ) : (
-            <>
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Reset Password</h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Enter your new password below.
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={(e) => {
-                        setForm({ ...form, password: e.target.value })
-                        if (errors.password) setErrors((prev) => {
-                          const next = { ...prev }; delete next.password; return next
-                        })
-                      }}
-                      className={`w-full pl-10 pr-12 py-3 rounded-lg border ${
-                        errors.password
-                          ? 'border-red-500 focus:ring-red-500'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                      } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors`}
-                      placeholder="Min. 6 characters"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type={showConfirm ? 'text' : 'password'}
-                      value={form.confirmPassword}
-                      onChange={(e) => {
-                        setForm({ ...form, confirmPassword: e.target.value })
-                        if (errors.confirmPassword) setErrors((prev) => {
-                          const next = { ...prev }; delete next.confirmPassword; return next
-                        })
-                      }}
-                      className={`w-full pl-10 pr-12 py-3 rounded-lg border ${
-                        errors.confirmPassword
-                          ? 'border-red-500 focus:ring-red-500'
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                      } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors`}
-                      placeholder="Repeat new password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    'Reset Password'
-                  )}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
-        <footer className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mt-8">
-          <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" />
-            <p><strong className="text-gray-700 dark:text-gray-300">Medical Disclaimer:</strong> This application is intended for educational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical conditions.</p>
+          <div className="w-16 h-16 bg-primary-50 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle2 className="w-8 h-8 text-primary-600 dark:text-primary-300" />
           </div>
-        </footer>
-      </motion.div>
-    </div>
+          <h1 className="heading-display text-2xl font-semibold text-ink-900 dark:text-cream-100 mb-2">
+            Password reset successful!
+          </h1>
+          <p className="text-ink-500 dark:text-cream-400/70 mb-6">
+            Your password has been updated successfully.
+          </p>
+          <Button size="lg" className="w-full" onClick={() => router.push('/login')}>
+            Sign In with New Password
+          </Button>
+        </motion.div>
+      ) : (
+        <>
+          <h1 className="heading-display text-3xl font-semibold text-ink-900 dark:text-cream-100">
+            Reset your password
+          </h1>
+          <p className="text-ink-500 dark:text-cream-400/70 mt-2 mb-8">
+            Enter your new password below.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <Field>
+              <Label>New Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-400 dark:text-cream-400/50" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(e) => {
+                    setForm({ ...form, password: e.target.value })
+                    if (errors.password)
+                      setErrors((prev) => {
+                        const next = { ...prev }
+                        delete next.password
+                        return next
+                      })
+                  }}
+                  className={cn('pl-11 pr-12', errorClass(errors.password))}
+                  placeholder="Min. 6 characters"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-primary-600 dark:text-cream-400/50 dark:hover:text-primary-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              <FieldError>{errors.password}</FieldError>
+            </Field>
+
+            <Field>
+              <Label>Confirm New Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-ink-400 dark:text-cream-400/50" />
+                <Input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={form.confirmPassword}
+                  onChange={(e) => {
+                    setForm({ ...form, confirmPassword: e.target.value })
+                    if (errors.confirmPassword)
+                      setErrors((prev) => {
+                        const next = { ...prev }
+                        delete next.confirmPassword
+                        return next
+                      })
+                  }}
+                  className={cn('pl-11 pr-12', errorClass(errors.confirmPassword))}
+                  placeholder="Repeat new password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-primary-600 dark:text-cream-400/50 dark:hover:text-primary-300 transition-colors"
+                >
+                  {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+              <FieldError>{errors.confirmPassword}</FieldError>
+            </Field>
+
+            <Button type="submit" size="lg" className="w-full" loading={loading}>
+              {loading ? 'Resetting password...' : 'Reset Password'}
+            </Button>
+          </form>
+        </>
+      )}
+
+      <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-cream-200 dark:border-ink-800 bg-white dark:bg-ink-900 p-4 text-xs text-ink-500 dark:text-cream-400/70">
+        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-accent-500" />
+        <p>
+          <strong className="text-ink-700 dark:text-cream-200">Medical Disclaimer:</strong> This application is
+          intended for educational purposes only. It does not replace professional medical advice, diagnosis, or
+          treatment. Always consult a licensed healthcare provider for serious medical conditions.
+        </p>
+      </div>
+    </AuthLayout>
   )
 }

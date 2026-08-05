@@ -12,19 +12,23 @@ import {
   ArrowLeft,
   AlertTriangle,
   User,
+  CalendarPlus,
 } from 'lucide-react';
-import PatientSidebar from '@/components/patient/PatientSidebar';
-import PatientHeader from '@/components/patient/PatientHeader';
+import { PatientLayout } from '@/components/layout/PatientLayout';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Field, Label, Input, Select, Textarea } from '@/components/ui/Form';
 import { appointmentService } from '@/services/appointment.service';
 import { useAuth } from '@/hooks/useAuth';
+import { useMounted } from '@/hooks/useMounted';
 import toast from 'react-hot-toast';
 
 export default function BookAppointmentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const mounted = useMounted();
 
-  const [isDark, setIsDark] = useState(false);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
 
@@ -88,165 +92,158 @@ export default function BookAppointmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PatientSidebar />
-      <PatientHeader onToggleDark={() => setIsDark(!isDark)} isDark={isDark} />
+    <PatientLayout>
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-1.5 text-sm text-ink-500 dark:text-cream-300/70 hover:text-primary-600 dark:hover:text-primary-300 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" /> Back
+      </button>
 
-      <main className="lg:pl-72">
-        <div className="p-4 lg:p-8 max-w-3xl mx-auto space-y-6">
-          <div>
-            <button
-              onClick={() => router.back()}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Book New Appointment</h1>
-            <p className="text-gray-500 mt-1">Fill in the details below to schedule your visit</p>
-          </div>
+      <div>
+        <p className="text-sm font-medium text-primary-600 dark:text-primary-300">Scheduling</p>
+        <h1 className="heading-display text-3xl font-semibold text-ink-900 dark:text-cream-100 mt-1">
+          Book New Appointment
+        </h1>
+        <p className="mt-1.5 text-ink-500 dark:text-cream-300/70">Fill in the details below to schedule your visit</p>
+      </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-          >
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Appointment Details</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Booked for <strong>{user?.full_name || 'Patient'}</strong>
-              </p>
-            </div>
-
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-blue-600" /> Patient Name
-                </label>
-                <input
-                  type="text"
-                  value={user?.full_name || ''}
-                  disabled
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
-                  <Stethoscope className="w-4 h-4 text-blue-600" /> Doctor
-                </label>
-                {loadingDoctors ? (
-                  <div className="h-11 bg-gray-100 rounded-xl animate-pulse" />
-                ) : (
-                  <select
-                    value={form.doctorId}
-                    onChange={(e) => setForm({ ...form, doctorId: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a doctor</option>
-                    {doctors.map((d: any) => (
-                      <option key={d.id} value={d.id}>
-                        {d.user?.full_name || d.name} - {d.specialty}
-                        {d.hospital_name ? ` (${d.hospital_name})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {querySpecialty && (
-                  <p className="text-xs text-blue-600 mt-1.5">Recommended specialty: {querySpecialty}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 text-blue-600" /> Clinic / Hospital
-                </label>
-                <input
-                  type="text"
-                  value={form.clinic}
-                  onChange={(e) => setForm({ ...form, clinic: e.target.value })}
-                  placeholder="e.g. City General Hospital"
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-blue-600" /> Date
-                  </label>
-                  <input
-                    type="date"
-                    value={form.date}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-blue-600" /> Time
-                  </label>
-                  <input
-                    type="time"
-                    value={form.time}
-                    onChange={(e) => setForm({ ...form, time: e.target.value })}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for Visit (optional)</label>
-                <textarea
-                  value={form.reason}
-                  onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                  rows={2}
-                  placeholder="Brief reason for the visit..."
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Notes (optional)</label>
-                <textarea
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  rows={3}
-                  placeholder="Any additional notes for the doctor..."
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => router.push('/patient/appointments')}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                >
-                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Confirm Booking
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 leading-relaxed">
-              Your appointment will be sent to the doctor for confirmation. This application is for educational
-              purposes only.
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl"
+      >
+        <Card className="overflow-hidden">
+          <div className="p-6 border-b border-cream-200 dark:border-ink-800">
+            <h2 className="text-lg font-semibold text-ink-900 dark:text-cream-100">Appointment Details</h2>
+            <p className="text-sm text-ink-500 dark:text-cream-300/70 mt-0.5">
+              Booked for <strong className="text-ink-900 dark:text-cream-100">{user?.full_name || 'Patient'}</strong>
             </p>
           </div>
-        </div>
-      </main>
-    </div>
+
+          <div className="p-6 space-y-5">
+            <Field>
+              <Label className="flex items-center gap-1.5">
+                <User className="h-4 w-4 text-primary-600 dark:text-primary-300" /> Patient Name
+              </Label>
+              <Input
+                type="text"
+                value={user?.full_name || ''}
+                disabled
+                className="bg-cream-100 dark:bg-ink-800 text-ink-500 dark:text-cream-300/70"
+              />
+            </Field>
+
+            <Field>
+              <Label className="flex items-center gap-1.5">
+                <Stethoscope className="h-4 w-4 text-primary-600 dark:text-primary-300" /> Doctor
+              </Label>
+              {loadingDoctors ? (
+                <div className="h-11 bg-cream-100 dark:bg-ink-800 rounded-xl animate-pulse" />
+              ) : (
+                <Select
+                  value={form.doctorId}
+                  onChange={(e) => setForm({ ...form, doctorId: e.target.value })}
+                >
+                  <option value="">Select a doctor</option>
+                  {doctors.map((d: any) => (
+                    <option key={d.id} value={d.id}>
+                      {d.user?.full_name || d.name} - {d.specialty}
+                      {d.hospital_name ? ` (${d.hospital_name})` : ''}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              {querySpecialty && (
+                <p className="text-xs text-primary-600 dark:text-primary-300 mt-1.5">
+                  Recommended specialty: {querySpecialty}
+                </p>
+              )}
+            </Field>
+
+            <Field>
+              <Label className="flex items-center gap-1.5">
+                <Building2 className="h-4 w-4 text-primary-600 dark:text-primary-300" /> Clinic / Hospital
+              </Label>
+              <Input
+                type="text"
+                value={form.clinic}
+                onChange={(e) => setForm({ ...form, clinic: e.target.value })}
+                placeholder="e.g. City General Hospital"
+              />
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field>
+                <Label className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-primary-600 dark:text-primary-300" /> Date
+                </Label>
+                <Input
+                  type="date"
+                  value={form.date}
+                  min={mounted ? new Date().toISOString().split('T')[0] : undefined}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                />
+              </Field>
+              <Field>
+                <Label className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-primary-600 dark:text-primary-300" /> Time
+                </Label>
+                <Input
+                  type="time"
+                  value={form.time}
+                  onChange={(e) => setForm({ ...form, time: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <Field>
+              <Label>Reason for Visit (optional)</Label>
+              <Textarea
+                value={form.reason}
+                onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                placeholder="Brief reason for the visit..."
+                className="min-h-[64px]"
+              />
+            </Field>
+
+            <Field>
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="Any additional notes for the doctor..."
+              />
+            </Field>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => router.push('/patient/appointments')}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                loading={submitting}
+                onClick={handleSubmit}
+              >
+                {!submitting && <CalendarPlus className="h-4 w-4" />}
+                Confirm Booking
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      <div className="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-2xl p-4 flex items-start gap-3 max-w-3xl">
+        <AlertTriangle className="h-5 w-5 text-accent-600 dark:text-accent-300 shrink-0 mt-0.5" />
+        <p className="text-sm text-accent-800 dark:text-accent-200 leading-relaxed">
+          Your appointment will be sent to the doctor for confirmation. This application is for educational
+          purposes only.
+        </p>
+      </div>
+    </PatientLayout>
   );
 }

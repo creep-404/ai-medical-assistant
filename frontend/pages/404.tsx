@@ -2,64 +2,54 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Home, Search, ArrowLeft, Stethoscope } from 'lucide-react'
+import { Home, ArrowLeft, Stethoscope } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/Button'
+import { cn } from '@/lib/cn'
+import { Logo } from '@/components/ui/Logo'
 
 export default function Custom404() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-cream-50 dark:bg-ink-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary-200/40 dark:bg-primary-900/20 rounded-full blur-3xl" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-200/40 dark:bg-accent-900/20 rounded-full blur-3xl" />
+      <div className="absolute top-8 left-8">
+        <Logo size="sm" />
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-center max-w-lg"
+        className="text-center max-w-lg relative z-10"
       >
         <motion.div
           animate={{ rotate: [0, -10, 10, -10, 0] }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="w-28 h-28 bg-gradient-to-br from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-8"
+          className="w-24 h-24 bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/40 dark:to-secondary-900/40 rounded-full flex items-center justify-center mx-auto mb-8 shadow-soft"
         >
-          <Stethoscope className="w-14 h-14 text-blue-600 dark:text-blue-400" />
+          <Stethoscope className="w-12 h-12 text-primary-600 dark:text-primary-300" />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <h1 className="text-8xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 mb-4">
+        <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.2 }}>
+          <h1 className="heading-display text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-accent-500 mb-4">
             404
           </h1>
         </motion.div>
 
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+        <h2 className="text-2xl font-semibold text-ink-900 dark:text-cream-100 mb-3">
           Oops! Page Not Found
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+        <p className="text-ink-600 dark:text-cream-300/70 mb-8 leading-relaxed">
           Looks like you&apos;ve wandered into uncharted territory. The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <Home className="w-5 h-5" />
+          <Link href="/" className={cn(buttonVariants({ variant: 'primary', size: 'lg' }))}>
+            <Home className="w-4 h-4" />
             Go Back Home
           </Link>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200"
-          >
-            <ArrowLeft className="w-5 h-5" />
+          <Link href="/" className={cn(buttonVariants({ variant: 'outline', size: 'lg' }))}>
+            <ArrowLeft className="w-4 h-4" />
             Return to Dashboard
-          </Link>
-        </div>
-
-        <div className="mt-12 flex items-center justify-center gap-2 text-sm text-gray-400 dark:text-gray-500">
-          <Search className="w-4 h-4" />
-          <span>Try searching or go to our</span>
-          <Link href="/" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-            homepage
           </Link>
         </div>
       </motion.div>

@@ -2,26 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap');
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
-    font-family: 'Inter', sans-serif;
+    @apply bg-cream-100 dark:bg-ink-950 text-ink-900 dark:text-cream-100;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-primary-900 dark:bg-primary-800 dark:text-primary-100;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(15, 84, 70, 0.35) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    @apply bg-primary-900/30 dark:bg-primary-100/20;
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
   }
 }
 
 @layer components {
   .gradient-primary {
-    @apply bg-gradient-to-r from-blue-600 to-blue-500;
+    @apply bg-gradient-to-r from-primary-600 to-primary-500;
   }
-  .gradient-secondary {
-    @apply bg-gradient-to-r from-green-600 to-green-500;
+  .gradient-accent {
+    @apply bg-gradient-to-r from-accent-500 to-accent-400;
   }
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-300 hover:shadow-lift hover:-translate-y-1;
   }
   .glass-effect {
-    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm;
+    @apply bg-white/80 dark:bg-ink-900/80 backdrop-blur-sm;
+  }
+
+  .card {
+    @apply bg-white dark:bg-ink-900 rounded-2xl border border-cream-200 dark:border-ink-800 shadow-soft;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-2.5 rounded-xl border border-cream-300 dark:border-ink-700 bg-white dark:bg-ink-950 text-ink-900 dark:text-cream-100 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all;
+  }
+
+  .label-base {
+    @apply block text-sm font-medium text-ink-700 dark:text-cream-300 mb-1.5;
+  }
+
+  .heading-display {
+    @apply font-display tracking-tight;
+  }
+
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary-700 via-primary-600 to-primary-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-accent {
+    @apply bg-gradient-to-r from-accent-600 via-accent-500 to-accent-300 bg-clip-text text-transparent;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-ink-950;
   }
 }

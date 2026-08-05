@@ -1,13 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  Search, ChevronLeft, ChevronRight, Edit3, Trash2, CheckCircle, XCircle,
-  AlertTriangle, UserPlus, X, Star, Shield, Stethoscope
+  Search, ChevronLeft, ChevronRight, Edit3, Trash2,
+  AlertTriangle, UserPlus, Star, Shield, X
 } from 'lucide-react'
-import AdminSidebar from '@/components/admin/AdminSidebar'
-import AdminHeader from '@/components/admin/AdminHeader'
+import { AdminLayout } from '@/components/layout/AdminLayout'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Avatar } from '@/components/ui/Avatar'
+import { Modal } from '@/components/ui/Modal'
+import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table'
+import { Field, Input, Label } from '@/components/ui/Form'
+import { EmptyState } from '@/components/ui/Feedback'
+import { Disclaimer } from '@/components/ui/Disclaimer'
 
 interface Doctor {
   id: number
@@ -87,178 +94,166 @@ export default function AdminDoctorsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <AdminSidebar />
-      <div className="lg:pl-64 transition-all duration-300">
-        <AdminHeader />
-        <main className="p-4 lg:p-8 space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Manage Doctors</h1>
-              <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all">
-                <UserPlus className="w-4 h-4" /> Add Doctor
+    <AdminLayout>
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="heading-display text-2xl sm:text-3xl font-semibold text-ink-900 dark:text-cream-100">
+                Manage Doctors
+              </h1>
+              <p className="text-sm text-ink-500 dark:text-cream-400/70 mt-1">
+                {doctors.length} doctors registered · {doctors.filter((d) => d.verified).length} verified.
+              </p>
+            </div>
+            <Button onClick={() => setShowAdd(true)}>
+              <UserPlus className="w-4 h-4" /> Add Doctor
+            </Button>
+          </div>
+          <div className="relative max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
+            <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }} placeholder="Search by name, specialty, hospital..." className="input-base pl-10" />
+          </div>
+        </motion.div>
+
+        {showAdd && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-ink-900 dark:text-cream-100">Add New Doctor</h2>
+              <button onClick={() => setShowAdd(false)} className="p-1.5 rounded-lg hover:bg-cream-100 dark:hover:bg-ink-800 transition-colors">
+                <X className="w-5 h-5 text-ink-400" />
               </button>
             </div>
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input type="text" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1) }} placeholder="Search by name, specialty, hospital..." className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </motion.div>
-
-          <AnimatePresence>
-            {showAdd && (
-              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Doctor</h2>
-                  <button onClick={() => setShowAdd(false)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><X className="w-5 h-5 text-gray-400" /></button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(['name', 'email'] as const).map((field) => (
-                    <div key={field}>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">{field}</label>
-                      <input type="text" value={addForm[field]} onChange={(e) => setAddForm({ ...addForm, [field]: e.target.value })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                  ))}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialty</label>
-                    <input type="text" value={addForm.specialty} onChange={(e) => setAddForm({ ...addForm, specialty: e.target.value })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hospital</label>
-                    <input type="text" value={addForm.hospital} onChange={(e) => setAddForm({ ...addForm, hospital: e.target.value })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Experience (years)</label>
-                    <input type="number" value={addForm.experience} onChange={(e) => setAddForm({ ...addForm, experience: Number(e.target.value) })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                </div>
-                <div className="flex gap-3 justify-end mt-4">
-                  <button onClick={() => setShowAdd(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                  <button onClick={handleAdd} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700">Add Doctor</button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800/50">
-                  <tr>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Doctor</th>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Specialty</th>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Hospital</th>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Experience</th>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Rating</th>
-                    <th className="text-left p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Verified</th>
-                    <th className="text-right p-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {paginated.map((d) => (
-                    <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-8 h-8 bg-gradient-to-br ${d.color} rounded-full flex items-center justify-center text-white text-xs font-bold`}>{d.avatar}</div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">{d.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{d.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3 text-sm text-gray-600 dark:text-gray-400">{d.specialty}</td>
-                      <td className="p-3 text-sm text-gray-600 dark:text-gray-400">{d.hospital}</td>
-                      <td className="p-3 text-sm text-gray-600 dark:text-gray-400">{d.experience} yrs</td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          <span className="text-sm text-gray-900 dark:text-white">{d.rating}</span>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${d.verified ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
-                          <Shield className="w-3 h-3" /> {d.verified ? 'Verified' : 'Unverified'}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => toggleVerified(d.id)} className={`p-1.5 rounded-lg transition-colors ${d.verified ? 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800' : 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}`} title={d.verified ? 'Unverify' : 'Verify'}>
-                            <Shield className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => handleEdit(d)} className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" title="Edit"><Edit3 className="w-4 h-4" /></button>
-                          <button onClick={() => setDeleteConfirm(d.id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Remove"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button key={page} onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-blue-600 text-white' : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>{page}</button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(['name', 'email'] as const).map((field) => (
+                <Field key={field}>
+                  <Label className="capitalize">{field}</Label>
+                  <Input type="text" value={addForm[field]} onChange={(e) => setAddForm({ ...addForm, [field]: e.target.value })} />
+                </Field>
               ))}
-              <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
+              <Field>
+                <Label>Specialty</Label>
+                <Input type="text" value={addForm.specialty} onChange={(e) => setAddForm({ ...addForm, specialty: e.target.value })} />
+              </Field>
+              <Field>
+                <Label>Hospital</Label>
+                <Input type="text" value={addForm.hospital} onChange={(e) => setAddForm({ ...addForm, hospital: e.target.value })} />
+              </Field>
+              <Field>
+                <Label>Experience (years)</Label>
+                <Input type="number" value={addForm.experience} onChange={(e) => setAddForm({ ...addForm, experience: Number(e.target.value) })} />
+              </Field>
             </div>
-          )}
+            <div className="flex gap-3 justify-end mt-4">
+              <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
+              <Button onClick={handleAdd}>Add Doctor</Button>
+            </div>
+          </motion.div>
+        )}
 
-          <AnimatePresence>
-            {editingDoctor && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setEditingDoctor(null)}>
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full shadow-2xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Edit Doctor</h2>
-                    <button onClick={() => setEditingDoctor(null)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"><X className="w-5 h-5 text-gray-400" /></button>
-                  </div>
-                  <div className="space-y-4">
-                    {(['name', 'email', 'specialty', 'hospital'] as const).map((field) => (
-                      <div key={field}>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 capitalize">{field}</label>
-                        <input type="text" value={editForm[field]} onChange={(e) => setEditForm({ ...editForm, [field]: e.target.value })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
+          {paginated.length === 0 ? (
+            <EmptyState icon={<Search className="h-7 w-7" />} title="No doctors found" description="Try adjusting your search." />
+          ) : (
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Doctor</TH>
+                  <TH>Specialty</TH>
+                  <TH>Hospital</TH>
+                  <TH>Experience</TH>
+                  <TH>Rating</TH>
+                  <TH>Verified</TH>
+                  <TH className="text-right">Actions</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {paginated.map((d) => (
+                  <TR key={d.id}>
+                    <TD>
+                      <div className="flex items-center gap-2">
+                        <Avatar name={d.name} initials={d.avatar} size="sm" />
+                        <div>
+                          <p className="text-sm font-medium text-ink-900 dark:text-cream-100">{d.name}</p>
+                          <p className="text-xs text-ink-500 dark:text-cream-400/70">{d.email}</p>
+                        </div>
                       </div>
-                    ))}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Experience (years)</label>
-                      <input type="number" value={editForm.experience} onChange={(e) => setEditForm({ ...editForm, experience: Number(e.target.value) })} className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button onClick={() => setEditingDoctor(null)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                      <button onClick={saveEdit} className="flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700">Save</button>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    </TD>
+                    <TD className="text-sm text-ink-600 dark:text-cream-300/70">{d.specialty}</TD>
+                    <TD className="text-sm text-ink-600 dark:text-cream-300/70">{d.hospital}</TD>
+                    <TD className="text-sm text-ink-600 dark:text-cream-300/70">{d.experience} yrs</TD>
+                    <TD>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-accent-400 text-accent-400" />
+                        <span className="text-sm text-ink-900 dark:text-cream-100">{d.rating}</span>
+                      </div>
+                    </TD>
+                    <TD>
+                      <Badge className={d.verified ? 'bg-secondary-100 text-secondary-700 dark:bg-secondary-900/40 dark:text-secondary-300' : 'bg-cream-200 text-ink-600 dark:bg-ink-800 dark:text-cream-300'}>
+                        <Shield className="w-3 h-3" /> {d.verified ? 'Verified' : 'Unverified'}
+                      </Badge>
+                    </TD>
+                    <TD>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => toggleVerified(d.id)} className={`p-1.5 rounded-lg transition-colors ${d.verified ? 'text-ink-400 hover:bg-cream-100 dark:hover:bg-ink-800' : 'text-secondary-600 hover:bg-secondary-50 dark:hover:bg-secondary-900/20'}`} title={d.verified ? 'Unverify' : 'Verify'}>
+                          <Shield className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleEdit(d)} className="p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors" title="Edit"><Edit3 className="w-4 h-4" /></button>
+                        <button onClick={() => setDeleteConfirm(d.id)} className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Remove"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </TD>
+                  </TR>
+                ))}
+              </TBody>
+            </Table>
+          )}
+        </motion.div>
 
-          <AnimatePresence>
-            {deleteConfirm && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-900 rounded-2xl max-w-sm w-full shadow-2xl p-6 text-center">
-                  <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Remove Doctor</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to remove this doctor?</p>
-                  <div className="flex gap-3">
-                    <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">Cancel</button>
-                    <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700">Remove</button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2">
+            <button onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="p-2 rounded-xl border border-cream-300 dark:border-ink-700 text-ink-600 dark:text-cream-300/70 hover:bg-cream-100 dark:hover:bg-ink-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button key={page} onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${currentPage === page ? 'bg-primary-600 text-white shadow-sm' : 'border border-cream-300 dark:border-ink-700 text-ink-600 dark:text-cream-300/70 hover:bg-cream-100 dark:hover:bg-ink-800'}`}>{page}</button>
+            ))}
+            <button onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="p-2 rounded-xl border border-cream-300 dark:border-ink-700 text-ink-600 dark:text-cream-300/70 hover:bg-cream-100 dark:hover:bg-ink-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronRight className="w-4 h-4" /></button>
+          </div>
+        )}
 
-          <footer className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" />
-              <p><strong className="text-gray-700 dark:text-gray-300">Medical Disclaimer:</strong> This application is intended for educational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical conditions.</p>
+        <Modal open={!!editingDoctor} onClose={() => setEditingDoctor(null)} title="Edit Doctor">
+          <div className="space-y-4">
+            {(['name', 'email', 'specialty', 'hospital'] as const).map((field) => (
+              <Field key={field}>
+                <Label className="capitalize">{field}</Label>
+                <Input type="text" value={editForm[field]} onChange={(e) => setEditForm({ ...editForm, [field]: e.target.value })} />
+              </Field>
+            ))}
+            <Field>
+              <Label>Experience (years)</Label>
+              <Input type="number" value={editForm.experience} onChange={(e) => setEditForm({ ...editForm, experience: Number(e.target.value) })} />
+            </Field>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditingDoctor(null)}>Cancel</Button>
+              <Button className="flex-1" onClick={saveEdit}>Save</Button>
             </div>
-          </footer>
-        </main>
+          </div>
+        </Modal>
+
+        <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} size="sm">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+            </div>
+            <h2 className="text-lg font-bold text-ink-900 dark:text-cream-100 mb-2">Remove Doctor</h2>
+            <p className="text-sm text-ink-500 dark:text-cream-400/70 mb-6">Are you sure you want to remove this doctor?</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+              <Button variant="danger" className="flex-1" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Remove</Button>
+            </div>
+          </div>
+        </Modal>
+
+        <Disclaimer />
       </div>
-    </div>
+    </AdminLayout>
   )
 }

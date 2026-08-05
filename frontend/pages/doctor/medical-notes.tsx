@@ -1,13 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   StickyNote, Plus, Search, Edit3, Trash2, Save, User,
-  CalendarDays, AlertTriangle, X, FileText, Pill, Stethoscope
+  CalendarDays, X, FileText, Pill
 } from 'lucide-react'
-import DoctorSidebar from '@/components/doctor/DoctorSidebar'
-import DoctorHeader from '@/components/doctor/DoctorHeader'
+import { DoctorLayout } from '@/components/layout/DoctorLayout'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Field, Input, Label, Select, Textarea } from '@/components/ui/Form'
+import { EmptyState } from '@/components/ui/Feedback'
+import { Disclaimer } from '@/components/ui/Disclaimer'
 
 interface MedicalNote {
   id: number
@@ -81,110 +85,101 @@ export default function MedicalNotesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <DoctorSidebar />
-      <div className="lg:pl-64 transition-all duration-300">
-        <DoctorHeader />
-        <main className="p-4 lg:p-8 space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Medical Notes</h1>
-              <button
-                onClick={() => { resetForm(); setShowForm(true) }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all"
-              >
-                <Plus className="w-4 h-4" /> Add New Note
+    <DoctorLayout>
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h1 className="heading-display text-2xl sm:text-3xl font-semibold text-ink-900 dark:text-cream-100">
+              Medical Notes
+            </h1>
+            <Button onClick={() => { resetForm(); setShowForm(true) }}>
+              <Plus className="w-4 h-4" /> Add New Note
+            </Button>
+          </div>
+          <div className="relative max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search notes..."
+              className="input-base pl-10"
+            />
+          </div>
+        </motion.div>
+
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-ink-900 dark:text-cream-100">
+                {editingId ? 'Edit Medical Note' : 'New Medical Note'}
+              </h2>
+              <button onClick={resetForm} className="p-1.5 rounded-lg hover:bg-cream-100 dark:hover:bg-ink-800 transition-colors">
+                <X className="w-5 h-5 text-ink-400" />
               </button>
             </div>
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <Field>
+                <Label>Patient</Label>
+                <Select
+                  value={form.patientId}
+                  onChange={(e) => setForm({ ...form, patientId: Number(e.target.value) })}
+                >
+                  {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </Select>
+              </Field>
+              <Field>
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                />
+              </Field>
+            </div>
+            <Field className="mb-4">
+              <Label>Diagnosis</Label>
+              <Input
                 type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search notes..."
-                className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.diagnosis}
+                onChange={(e) => setForm({ ...form, diagnosis: e.target.value })}
+                placeholder="Enter diagnosis"
               />
+            </Field>
+            <Field className="mb-4">
+              <Label>Medical Notes</Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                rows={4}
+                placeholder="Enter detailed medical notes..."
+              />
+            </Field>
+            <Field className="mb-4">
+              <Label>Prescriptions</Label>
+              <Textarea
+                value={form.prescriptions}
+                onChange={(e) => setForm({ ...form, prescriptions: e.target.value })}
+                rows={2}
+                placeholder="Enter prescriptions..."
+              />
+            </Field>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={resetForm}>Cancel</Button>
+              <Button onClick={handleSubmit}>
+                <Save className="w-4 h-4" /> {editingId ? 'Update' : 'Save'} Note
+              </Button>
             </div>
           </motion.div>
+        )}
 
-          <AnimatePresence>
-            {showForm && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {editingId ? 'Edit Medical Note' : 'New Medical Note'}
-                  </h2>
-                  <button onClick={resetForm} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <X className="w-5 h-5 text-gray-400" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient</label>
-                    <select
-                      value={form.patientId}
-                      onChange={(e) => setForm({ ...form, patientId: Number(e.target.value) })}
-                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {patients.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={form.date}
-                      onChange={(e) => setForm({ ...form, date: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Diagnosis</label>
-                  <input
-                    type="text"
-                    value={form.diagnosis}
-                    onChange={(e) => setForm({ ...form, diagnosis: e.target.value })}
-                    placeholder="Enter diagnosis"
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medical Notes</label>
-                  <textarea
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    rows={4}
-                    placeholder="Enter detailed medical notes..."
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prescriptions</label>
-                  <textarea
-                    value={form.prescriptions}
-                    onChange={(e) => setForm({ ...form, prescriptions: e.target.value })}
-                    rows={2}
-                    placeholder="Enter prescriptions..."
-                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  />
-                </div>
-                <div className="flex gap-3 justify-end">
-                  <button onClick={resetForm} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-                  <button onClick={handleSubmit} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all">
-                    <Save className="w-4 h-4" /> {editingId ? 'Update' : 'Save'} Note
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+        {filtered.length === 0 ? (
+          <EmptyState icon={<FileText className="h-7 w-7" />} title="No medical notes found" description="Add a new note to get started." />
+        ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             {filtered.map((note, i) => (
               <motion.div
@@ -192,26 +187,26 @@ export default function MedicalNotesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 lg:p-5 hover:shadow-md transition-shadow"
+                className="card card-hover p-4 lg:p-5"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                    <div className="p-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-300">
                       <StickyNote className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-1">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{note.diagnosis}</h3>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <h3 className="text-sm font-semibold text-ink-900 dark:text-cream-100">{note.diagnosis}</h3>
+                        <span className="text-xs text-ink-500 dark:text-cream-400/70 flex items-center gap-1">
                           <User className="w-3 h-3" /> {note.patientName}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <span className="text-xs text-ink-500 dark:text-cream-400/70 flex items-center gap-1">
                           <CalendarDays className="w-3 h-3" /> {note.date}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{note.notes}</p>
+                      <p className="text-sm text-ink-600 dark:text-cream-400/70 mt-1">{note.notes}</p>
                       {note.prescriptions && (
-                        <div className="mt-2 flex items-start gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
+                        <div className="mt-2 flex items-start gap-1.5 text-xs text-secondary-700 dark:text-secondary-300 bg-secondary-100 dark:bg-secondary-900/20 rounded-xl p-2">
                           <Pill className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                           <span>{note.prescriptions}</span>
                         </div>
@@ -219,32 +214,21 @@ export default function MedicalNotesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 ml-2">
-                    <button onClick={() => handleEdit(note)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <button onClick={() => handleEdit(note)} className="p-1.5 rounded-lg text-ink-400 hover:text-primary-600 dark:hover:text-primary-300 hover:bg-cream-100 dark:hover:bg-ink-800 transition-colors">
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => handleDelete(note.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <button onClick={() => handleDelete(note.id)} className="p-1.5 rounded-lg text-ink-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-cream-100 dark:hover:bg-ink-800 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
               </motion.div>
             ))}
-            {filtered.length === 0 && (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                <FileText className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                <p>No medical notes found</p>
-              </div>
-            )}
           </motion.div>
+        )}
 
-          <footer className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-            <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-500" />
-              <p><strong className="text-gray-700 dark:text-gray-300">Medical Disclaimer:</strong> This application is intended for educational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical conditions.</p>
-            </div>
-          </footer>
-        </main>
+        <Disclaimer />
       </div>
-    </div>
+    </DoctorLayout>
   )
 }

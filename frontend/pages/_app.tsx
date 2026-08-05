@@ -17,10 +17,22 @@ export default function App({ Component, pageProps }: AppProps) {
           <Toaster
             position="top-right"
             toastOptions={{
-              duration: 3000,
+              duration: 3500,
               style: {
-                background: '#363636',
-                color: '#fff',
+                background: '#fff',
+                color: '#20302d',
+                borderRadius: '14px',
+                border: '1px solid #f0ece2',
+                boxShadow: '0 8px 28px rgba(16,26,25,0.12)',
+                padding: '12px 16px',
+                fontSize: '14px',
+                fontWeight: 500,
+              },
+              success: {
+                iconTheme: { primary: '#146957', secondary: '#fff' },
+              },
+              error: {
+                iconTheme: { primary: '#dc2626', secondary: '#fff' },
               },
             }}
           />

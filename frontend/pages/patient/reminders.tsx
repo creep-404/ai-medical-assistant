@@ -16,8 +16,13 @@ import {
   Moon,
   Sunrise,
 } from 'lucide-react';
-import PatientSidebar from '@/components/patient/PatientSidebar';
-import PatientHeader from '@/components/patient/PatientHeader';
+import { PatientLayout } from '@/components/layout/PatientLayout';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { Field, Label, Input, Select } from '@/components/ui/Form';
+import { EmptyState } from '@/components/ui/Feedback';
+import { cn } from '@/lib/cn';
 import { medicalService } from '@/services/medical.service';
 
 interface Reminder {
@@ -31,7 +36,6 @@ interface Reminder {
 }
 
 export default function RemindersPage() {
-  const [isDark, setIsDark] = useState(false);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -108,9 +112,9 @@ export default function RemindersPage() {
 
   function getTimeIcon(time: string) {
     const h = parseInt(time.split(':')[0]);
-    if (h < 12) return <Sunrise className="w-3.5 h-3.5 text-amber-500" />;
-    if (h < 17) return <Sun className="w-3.5 h-3.5 text-yellow-500" />;
-    return <Moon className="w-3.5 h-3.5 text-indigo-500" />;
+    if (h < 12) return <Sunrise className="h-3.5 w-3.5 text-accent-500" />;
+    if (h < 17) return <Sun className="h-3.5 w-3.5 text-yellow-500" />;
+    return <Moon className="h-3.5 w-3.5 text-indigo-500" />;
   }
 
   const todayEntries = reminders
@@ -119,99 +123,88 @@ export default function RemindersPage() {
     .sort((a, b) => a.time.localeCompare(b.time));
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PatientSidebar />
-      <PatientHeader onToggleDark={() => setIsDark(!isDark)} isDark={isDark} />
+    <PatientLayout>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-primary-600 dark:text-primary-300">Adherence</p>
+          <h1 className="heading-display text-3xl font-semibold text-ink-900 dark:text-cream-100 mt-1">
+            Medicine Reminders
+          </h1>
+          <p className="mt-1.5 text-ink-500 dark:text-cream-300/70">Never miss a dose</p>
+        </div>
+        <Button onClick={() => setShowForm(true)}>
+          <Plus className="h-4 w-4" />
+          Add Reminder
+        </Button>
+      </div>
 
-      <main className="lg:pl-72">
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Medicine Reminders</h1>
-              <p className="text-gray-500 mt-1">Never miss a dose</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Today's Timeline */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card>
+            <div className="p-5 border-b border-cream-200 dark:border-ink-800">
+              <h3 className="text-lg font-semibold text-ink-900 dark:text-cream-100 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary-600 dark:text-primary-300" />
+                Today&apos;s Schedule
+              </h3>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Reminder
-            </motion.button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Today's Timeline */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm"
-            >
-              <div className="p-5 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  Today&apos;s Schedule
-                </h3>
-              </div>
-              <div className="p-5">
-                {todayEntries.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Pill className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">No medications scheduled today</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {todayEntries.map((entry, i) => (
-                      <div key={i} className="flex items-start gap-3">
-                        <div className="flex flex-col items-center">
-                          {getTimeIcon(entry.time)}
-                          <div className="w-0.5 h-full min-h-[2rem] bg-gray-200 mt-1" />
-                        </div>
-                        <div className="flex-1 bg-gray-50 rounded-xl p-3">
-                          <p className="font-semibold text-gray-900 text-sm">{entry.medicine}</p>
-                          <p className="text-xs text-gray-500">{entry.dosage} - {entry.time}</p>
-                        </div>
+            <div className="p-5">
+              {todayEntries.length === 0 ? (
+                <EmptyState
+                  icon={<Pill className="h-8 w-8" />}
+                  title="Nothing scheduled today"
+                  description="No medications scheduled today"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {todayEntries.map((entry, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        {getTimeIcon(entry.time)}
+                        <div className="w-0.5 h-full min-h-[2rem] bg-cream-200 dark:bg-ink-800 mt-1" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Reminders List */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm"
-            >
-              <div className="p-5 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Pill className="w-5 h-5 text-blue-600" />
-                  All Reminders
-                </h3>
-              </div>
-              <div className="p-5">
-                {loading ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <div key={i} className="animate-pulse flex items-center gap-4 p-4 rounded-xl bg-gray-50">
-                        <div className="w-10 h-10 rounded-xl bg-gray-200" />
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-1/3" />
-                          <div className="h-3 bg-gray-200 rounded w-1/4" />
-                        </div>
+                      <div className="flex-1 bg-cream-100 dark:bg-ink-800 rounded-xl p-3">
+                        <p className="font-semibold text-ink-900 dark:text-cream-100 text-sm">{entry.medicine}</p>
+                        <p className="text-xs text-ink-500 dark:text-cream-300/70">{entry.dosage} - {entry.time}</p>
                       </div>
-                    ))}
-                  </div>
-                ) : reminders.length === 0 ? (
-                  <div className="text-center py-10 text-gray-500">
-                    <Pill className="w-16 h-16 mx-auto mb-3 text-gray-300" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">No reminders yet</h3>
-                    <p className="text-sm">Add your first medicine reminder to get started.</p>
-                  </div>
-                ) : (
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Reminders List */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2">
+          <Card>
+            <div className="p-5 border-b border-cream-200 dark:border-ink-800">
+              <h3 className="text-lg font-semibold text-ink-900 dark:text-cream-100 flex items-center gap-2">
+                <Pill className="h-5 w-5 text-primary-600 dark:text-primary-300" />
+                All Reminders
+              </h3>
+            </div>
+            <div className="p-5">
+              {loading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse flex items-center gap-4 p-4 rounded-xl bg-cream-100 dark:bg-ink-800">
+                      <div className="w-10 h-10 rounded-xl bg-cream-200 dark:bg-ink-700" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-cream-200 dark:bg-ink-700 rounded w-1/3" />
+                        <div className="h-3 bg-cream-200 dark:bg-ink-700 rounded w-1/4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : reminders.length === 0 ? (
+                <EmptyState
+                  icon={<Pill className="h-8 w-8" />}
+                  title="No reminders yet"
+                  description="Add your first medicine reminder to get started."
+                />
+              ) : (
+                <div className="space-y-1">
                   <AnimatePresence>
                     {reminders.map((r) => (
                       <motion.div
@@ -220,27 +213,31 @@ export default function RemindersPage() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         layout
-                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100"
+                        className="flex items-center gap-4 p-4 rounded-xl hover:bg-cream-100 dark:hover:bg-ink-800 transition-colors"
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          r.active ? 'bg-blue-50' : 'bg-gray-100'
-                        }`}>
-                          <Pill className={`w-5 h-5 ${r.active ? 'text-blue-600' : 'text-gray-400'}`} />
+                        <div className={cn(
+                          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                          r.active ? 'bg-primary-50 dark:bg-primary-900/30' : 'bg-cream-100 dark:bg-ink-800'
+                        )}>
+                          <Pill className={cn('h-5 w-5', r.active ? 'text-primary-600 dark:text-primary-300' : 'text-ink-400 dark:text-cream-300/50')} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`font-semibold ${r.active ? 'text-gray-900' : 'text-gray-400'}`}>
+                            <p className={cn('font-semibold', r.active ? 'text-ink-900 dark:text-cream-100' : 'text-ink-400 dark:text-cream-300/60')}>
                               {r.medicineName}
                             </p>
-                            <span className="text-xs text-gray-400">({r.dosage})</span>
+                            <span className="text-xs text-ink-400 dark:text-cream-300/50">({r.dosage})</span>
                           </div>
                           <div className="flex flex-wrap gap-1.5 mt-1.5">
                             {r.times.map((t, i) => (
                               <span
                                 key={i}
-                                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                                  r.active ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-400'
-                                }`}
+                                className={cn(
+                                  'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full',
+                                  r.active
+                                    ? 'bg-cream-100 dark:bg-ink-800 text-ink-600 dark:text-cream-300'
+                                    : 'bg-cream-100 dark:bg-ink-800 text-ink-400 dark:text-cream-300/50'
+                                )}
                               >
                                 {getTimeIcon(t)}
                                 {t}
@@ -248,165 +245,141 @@ export default function RemindersPage() {
                             ))}
                           </div>
                           {r.duration && (
-                            <p className="text-xs text-gray-400 mt-1">Duration: {r.duration}</p>
+                            <p className="text-xs text-ink-400 dark:text-cream-300/50 mt-1">Duration: {r.duration}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleToggle(r.id, r.active)}
-                            className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                            className="p-2 text-ink-400 dark:text-cream-300/50 hover:text-primary-600 dark:hover:text-primary-300 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
                             title={r.active ? 'Deactivate' : 'Activate'}
                           >
-                            {r.active ? <ToggleRight className="w-5 h-5 text-blue-600" /> : <ToggleLeft className="w-5 h-5" />}
+                            {r.active ? (
+                              <ToggleRight className="h-5 w-5 text-primary-600 dark:text-primary-300" />
+                            ) : (
+                              <ToggleLeft className="h-5 w-5" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleDelete(r.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                            className="p-2 text-ink-400 dark:text-cream-300/50 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             title="Delete"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
-                )}
-              </div>
-            </motion.div>
-          </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
+      </div>
 
-          {/* Add Reminder Modal */}
-          <AnimatePresence>
-            {showForm && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-              >
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl"
-                >
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg font-bold text-gray-900">Add Medicine Reminder</h2>
-                    <button onClick={() => setShowForm(false)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                      <X className="w-5 h-5 text-gray-500" />
+      {/* Add Reminder Modal */}
+      <Modal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="Add Medicine Reminder"
+        description="Set up a schedule so you never miss a dose"
+      >
+        <div className="space-y-4">
+          <Field>
+            <Label>Medicine Name</Label>
+            <Input
+              type="text"
+              value={form.medicineName}
+              onChange={(e) => setForm({ ...form, medicineName: e.target.value })}
+              placeholder="e.g. Paracetamol"
+            />
+          </Field>
+          <Field>
+            <Label>Dosage</Label>
+            <Input
+              type="text"
+              value={form.dosage}
+              onChange={(e) => setForm({ ...form, dosage: e.target.value })}
+              placeholder="e.g. 500mg, 1 tablet"
+            />
+          </Field>
+          <Field>
+            <Label>Frequency</Label>
+            <Select
+              value={form.frequency}
+              onChange={(e) => setForm({ ...form, frequency: e.target.value })}
+            >
+              <option>Daily</option>
+              <option>Twice a day</option>
+              <option>Three times a day</option>
+              <option>Weekly</option>
+              <option>As needed</option>
+            </Select>
+          </Field>
+          <Field>
+            <Label>Times</Label>
+            <div className="flex gap-2">
+              <Input
+                type="time"
+                value={timeInput}
+                onChange={(e) => setTimeInput(e.target.value)}
+                className="flex-1"
+              />
+              <Button onClick={() => addTime(timeInput)} disabled={!timeInput} variant="secondary">
+                Add
+              </Button>
+            </div>
+            {form.times.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {form.times.map((t, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-200 rounded-full text-sm border border-primary-200 dark:border-primary-800"
+                  >
+                    {t}
+                    <button onClick={() => removeTime(t)} className="hover:bg-primary-100 dark:hover:bg-primary-900/60 rounded-full p-0.5 transition-colors">
+                      <X className="h-3 w-3" />
                     </button>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
-                      <input
-                        type="text"
-                        value={form.medicineName}
-                        onChange={(e) => setForm({ ...form, medicineName: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g. Paracetamol"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Dosage</label>
-                      <input
-                        type="text"
-                        value={form.dosage}
-                        onChange={(e) => setForm({ ...form, dosage: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g. 500mg, 1 tablet"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
-                      <select
-                        value={form.frequency}
-                        onChange={(e) => setForm({ ...form, frequency: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option>Daily</option>
-                        <option>Twice a day</option>
-                        <option>Three times a day</option>
-                        <option>Weekly</option>
-                        <option>As needed</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Times</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="time"
-                          value={timeInput}
-                          onChange={(e) => setTimeInput(e.target.value)}
-                          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                          onClick={() => addTime(timeInput)}
-                          disabled={!timeInput}
-                          className="px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      {form.times.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {form.times.map((t, i) => (
-                            <span
-                              key={i}
-                              className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm border border-blue-200"
-                            >
-                              {t}
-                              <button onClick={() => removeTime(t)} className="hover:bg-blue-100 rounded-full p-0.5">
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Duration (e.g., 7 days)</label>
-                      <input
-                        type="text"
-                        value={form.duration}
-                        onChange={(e) => setForm({ ...form, duration: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g. 7 days, 2 weeks"
-                      />
-                    </div>
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => setShowForm(false)}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleAdd}
-                        disabled={submitting || !form.medicineName || !form.dosage || form.times.length === 0}
-                        className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-                      >
-                        {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                        Add Reminder
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
+                  </span>
+                ))}
+              </div>
             )}
-          </AnimatePresence>
-
-          {/* Disclaimer */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 leading-relaxed">
-              This application is intended for educational purposes only. It does not replace professional medical
-              advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical
-              conditions.
-            </p>
-          </div>
+          </Field>
+          <Field>
+            <Label>Duration (e.g., 7 days)</Label>
+            <Input
+              type="text"
+              value={form.duration}
+              onChange={(e) => setForm({ ...form, duration: e.target.value })}
+              placeholder="e.g. 7 days, 2 weeks"
+            />
+          </Field>
         </div>
-      </main>
-    </div>
+        <div className="mt-6 flex gap-3">
+          <Button variant="outline" className="flex-1" onClick={() => setShowForm(false)}>
+            Cancel
+          </Button>
+          <Button
+            className="flex-1"
+            loading={submitting}
+            disabled={!form.medicineName || !form.dosage || form.times.length === 0}
+            onClick={handleAdd}
+          >
+            Add Reminder
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Disclaimer */}
+      <div className="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-2xl p-4 flex items-start gap-3">
+        <AlertTriangle className="h-5 w-5 text-accent-600 dark:text-accent-300 shrink-0 mt-0.5" />
+        <p className="text-sm text-accent-800 dark:text-accent-200 leading-relaxed">
+          This application is intended for educational purposes only. It does not replace professional medical
+          advice, diagnosis, or treatment. Always consult a licensed healthcare provider for serious medical
+          conditions.
+        </p>
+      </div>
+    </PatientLayout>
   );
 }

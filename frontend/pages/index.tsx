@@ -9,24 +9,21 @@ import {
   Brain, ChevronDown, Menu, X, Moon, Sun, Users, Shield,
   Star, ChevronRight, ArrowRight, Clock, User, Mail, Phone,
   MapPin, Linkedin, Twitter, Github, AlertTriangle, Plus,
-  Search, CheckCircle, MessageSquare, TrendingUp, Award
+  Search, CheckCircle, MessageSquare, TrendingUp, Award, Sparkles
 } from 'lucide-react'
 import { useTheme } from '@/hooks/useTheme'
 import { useAuth } from '@/hooks/useAuth'
+import { useMounted } from '@/hooks/useMounted'
 import { getDashboardPath } from '@/lib/navigation'
+import { Logo } from '@/components/ui/Logo'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-100px' },
   transition: { duration: 0.6 },
-}
-
-const staggerContainer = {
-  initial: {},
-  whileInView: {},
-  viewport: { once: true, margin: '-100px' },
-  transition: { staggerChildren: 0.1 },
 }
 
 export default function HomePage() {
@@ -43,7 +40,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-cream-100 dark:bg-ink-950">
       <Navbar
         isDark={isDark}
         toggleTheme={toggleTheme}
@@ -109,20 +106,13 @@ function Navbar({
       transition={{ duration: 0.5 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg shadow-sm'
+          ? 'bg-cream-100/90 dark:bg-ink-950/90 backdrop-blur-xl shadow-soft'
           : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-xl flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
-              MediAssist AI
-            </span>
-          </Link>
+          <Logo />
 
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
@@ -131,9 +121,14 @@ function Navbar({
                 href={link.href}
                 onClick={(e) => {
                   e.preventDefault()
+                  setActiveSection(link.label)
                   document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className={`text-sm font-medium transition-colors ${
+                  activeSection === link.label
+                    ? 'text-primary-700 dark:text-primary-300'
+                    : 'text-ink-600 dark:text-cream-300/70 hover:text-primary-700 dark:hover:text-primary-300'
+                }`}
               >
                 {link.label}
               </a>
@@ -143,31 +138,25 @@ function Navbar({
           <div className="hidden lg:flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-xl text-ink-500 dark:text-cream-300/70 hover:bg-primary-50 dark:hover:bg-ink-800 transition-colors"
               aria-label="Toggle dark mode"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             {isAuthenticated ? (
-              <Link
-                href={getDashboardPath(userRole)}
-                className="py-2 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200"
-              >
-                Dashboard
+              <Link href={getDashboardPath(userRole)}>
+                <Button>Dashboard</Button>
               </Link>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="py-2 px-4 text-sm font-semibold text-ink-700 dark:text-cream-200 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
                 >
                   Sign In
                 </Link>
-                <Link
-                  href="/register"
-                  className="py-2 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200"
-                >
-                  Get Started
+                <Link href="/register">
+                  <Button>Get Started</Button>
                 </Link>
               </>
             )}
@@ -176,13 +165,13 @@ function Navbar({
           <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-xl text-ink-500 dark:text-cream-300/70 hover:bg-primary-50 dark:hover:bg-ink-800 transition-colors"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <button
               onClick={() => setMobileMenu(!mobileMenu)}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-2 rounded-xl text-ink-500 dark:text-cream-300/70 hover:bg-primary-50 dark:hover:bg-ink-800 transition-colors"
             >
               {mobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -196,7 +185,7 @@ function Navbar({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
+            className="lg:hidden bg-cream-100 dark:bg-ink-950 border-t border-cream-200 dark:border-ink-800"
           >
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => (
@@ -206,37 +195,38 @@ function Navbar({
                   onClick={(e) => {
                     e.preventDefault()
                     setMobileMenu(false)
+                    setActiveSection(link.label)
                     document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })
                   }}
-                  className="block py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                  className="block py-2 text-sm font-medium text-ink-700 dark:text-cream-200 hover:text-primary-700 dark:hover:text-primary-300"
                 >
                   {link.label}
                 </a>
               ))}
-              <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+              <div className="pt-3 border-t border-cream-200 dark:border-ink-800 flex gap-3">
                 {isAuthenticated ? (
                   <Link
                     href={getDashboardPath(userRole)}
                     onClick={() => setMobileMenu(false)}
-                    className="flex-1 text-center py-2 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium"
+                    className="flex-1 text-center"
                   >
-                    Dashboard
+                    <Button className="w-full">Dashboard</Button>
                   </Link>
                 ) : (
                   <>
                     <Link
                       href="/login"
                       onClick={() => setMobileMenu(false)}
-                      className="flex-1 text-center py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium"
+                      className="flex-1 text-center py-2 px-4 rounded-xl border border-cream-300 dark:border-ink-700 text-ink-700 dark:text-cream-200 text-sm font-semibold"
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/register"
                       onClick={() => setMobileMenu(false)}
-                      className="flex-1 text-center py-2 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium"
+                      className="flex-1 text-center"
                     >
-                      Get Started
+                      <Button className="w-full">Get Started</Button>
                     </Link>
                   </>
                 )}
@@ -253,47 +243,47 @@ function HeroSection({ isAuthenticated, userRole }: { isAuthenticated: boolean; 
   const router = useRouter()
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-emerald-700">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-emerald-300 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-300 rounded-full blur-3xl" />
+    <section id="home" className="relative min-h-screen flex items-center overflow-hidden pt-20">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-cream-100 to-accent-50 dark:from-ink-950 dark:via-ink-900 dark:to-ink-950">
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-20 left-20 w-96 h-96 bg-primary-300/40 dark:bg-primary-800/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-accent-300/40 dark:bg-accent-800/20 rounded-full blur-3xl animate-float-slow" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-200/30 dark:bg-primary-700/10 rounded-full blur-3xl" />
         </div>
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-gray-900 to-transparent" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-40">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
         <div className="max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-8"
+            className="inline-flex items-center gap-2 bg-white dark:bg-ink-800/80 backdrop-blur-sm rounded-full px-4 py-2 mb-8 shadow-soft border border-cream-200 dark:border-ink-700"
           >
-            <Brain className="w-4 h-4 text-blue-200" />
-            <span className="text-sm text-blue-100">AI-Powered Healthcare Assistant</span>
+            <Sparkles className="w-4 h-4 text-accent-500" />
+            <span className="text-sm font-medium text-primary-800 dark:text-primary-200">
+              AI-Powered Healthcare Assistant
+            </span>
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight"
+            className="heading-display text-5xl sm:text-6xl lg:text-7xl font-semibold text-ink-900 dark:text-cream-100 mb-6 leading-[1.05]"
           >
-            Your Intelligent
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-emerald-200">
-              Health Companion
-            </span>
+            Your intelligent{' '}
+            <em className="text-gradient-accent not-italic font-display italic">health companion</em>
+            , around the clock
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg sm:text-xl text-blue-100 mb-10 max-w-2xl leading-relaxed"
+            className="text-lg sm:text-xl text-ink-600 dark:text-cream-300/70 mb-10 max-w-2xl leading-relaxed"
           >
-            Early Guidance. Smarter Healthcare. Leverage the power of AI to check symptoms, predict diseases, 
+            Early guidance. Smarter healthcare. Leverage the power of AI to check symptoms, predict diseases,
             get medicine recommendations, and connect with expert doctors — all in one place.
           </motion.p>
 
@@ -304,20 +294,18 @@ function HeroSection({ isAuthenticated, userRole }: { isAuthenticated: boolean; 
             className="flex flex-col sm:flex-row gap-4"
           >
             {isAuthenticated ? (
-              <Link
-                href={getDashboardPath(userRole)}
-                className="inline-flex items-center justify-center gap-2 py-4 px-8 bg-white text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-xl hover:shadow-2xl text-lg"
-              >
-                Go to Dashboard
-                <ArrowRight className="w-5 h-5" />
+              <Link href={getDashboardPath(userRole)}>
+                <Button size="lg">
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
               </Link>
             ) : (
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 py-4 px-8 bg-white text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-xl hover:shadow-2xl text-lg"
-              >
-                Get Started Free
-                <ArrowRight className="w-5 h-5" />
+              <Link href="/register">
+                <Button size="lg">
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
               </Link>
             )}
             <a
@@ -326,10 +314,11 @@ function HeroSection({ isAuthenticated, userRole }: { isAuthenticated: boolean; 
                 e.preventDefault()
                 document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' })
               }}
-              className="inline-flex items-center justify-center gap-2 py-4 px-8 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-200 text-lg"
             >
-              Learn More
-              <ChevronDown className="w-5 h-5" />
+              <Button variant="outline" size="lg">
+                Learn More
+                <ChevronDown className="w-5 h-5" />
+              </Button>
             </a>
           </motion.div>
         </div>
@@ -348,11 +337,11 @@ function HeroSection({ isAuthenticated, userRole }: { isAuthenticated: boolean; 
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center hover:bg-white/15 transition-colors"
+              className="card card-hover p-4 text-center"
             >
-              <stat.icon className="w-5 h-5 text-blue-200 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white">{stat.value}</div>
-              <div className="text-sm text-blue-200">{stat.label}</div>
+              <stat.icon className="w-5 h-5 text-primary-600 dark:text-primary-300 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-ink-900 dark:text-cream-100">{stat.value}</div>
+              <div className="text-sm text-ink-500 dark:text-cream-400/70">{stat.label}</div>
             </div>
           ))}
         </motion.div>
@@ -366,62 +355,54 @@ const features = [
     icon: Search,
     title: 'Symptom Checker',
     description: 'Describe your symptoms and let AI analyze them to identify potential conditions with high accuracy.',
-    color: 'from-blue-500 to-blue-600',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+    tint: 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300',
   },
   {
     icon: Brain,
     title: 'Disease Prediction',
     description: 'Advanced ML models predict diseases based on your symptoms, medical history, and risk factors.',
-    color: 'from-purple-500 to-purple-600',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+    tint: 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-300',
   },
   {
     icon: Pill,
     title: 'Medicine Recommendations',
     description: 'Get intelligent medicine suggestions with dosage information and potential side effects.',
-    color: 'from-emerald-500 to-emerald-600',
-    bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+    tint: 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300',
   },
   {
     icon: Calendar,
     title: 'Doctor Appointments',
     description: 'Book appointments with specialized doctors directly through the platform with real-time availability.',
-    color: 'from-amber-500 to-amber-600',
-    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    tint: 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-300',
   },
   {
     icon: Heart,
     title: 'Health Dashboard',
     description: 'Track your health metrics, view history, and monitor your wellness journey over time.',
-    color: 'from-rose-500 to-rose-600',
-    bgColor: 'bg-rose-50 dark:bg-rose-900/20',
+    tint: 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300',
   },
   {
     icon: FileText,
     title: 'PDF Reports',
     description: 'Generate comprehensive PDF health reports with predictions, recommendations, and medical insights.',
-    color: 'from-cyan-500 to-cyan-600',
-    bgColor: 'bg-cyan-50 dark:bg-cyan-900/20',
+    tint: 'bg-accent-50 dark:bg-accent-900/20 text-accent-600 dark:text-accent-300',
   },
 ]
 
 function FeaturesSection() {
   return (
-    <section id="features" className="py-20 lg:py-28 bg-gray-50 dark:bg-gray-800/50">
+    <section id="features" className="py-20 lg:py-28 bg-white dark:bg-ink-900/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 rounded-full px-4 py-2 mb-4">
-            <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Features</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Everything You Need for{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              Better Health
-            </span>
+          <Badge variant="primary" className="mb-4">
+            <Activity className="w-4 h-4" />
+            Features
+          </Badge>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-ink-900 dark:text-cream-100 mb-4">
+            Everything you need for{' '}
+            <em className="text-gradient-primary not-italic font-display italic">better health</em>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-ink-500 dark:text-cream-400/70">
             Comprehensive AI-powered tools designed to help you make informed healthcare decisions.
           </p>
         </motion.div>
@@ -440,19 +421,21 @@ function FeaturesSection() {
                 whileInView: { opacity: 1, y: 0 },
               }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group bg-white dark:bg-gray-800 rounded-2xl p-6 lg:p-8 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 dark:border-gray-700"
+              className="card card-hover p-6 lg:p-8 group"
             >
               <div
-                className={`w-14 h-14 ${feature.bgColor} rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
+                className={`w-14 h-14 ${feature.tint} rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
               >
-                <feature.icon className="w-7 h-7 text-gray-700 dark:text-white" />
+                <feature.icon className="w-7 h-7" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{feature.title}</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{feature.description}</p>
+              <h3 className="heading-display text-xl font-semibold text-ink-900 dark:text-cream-100 mb-3">
+                {feature.title}
+              </h3>
+              <p className="text-ink-500 dark:text-cream-400/70 leading-relaxed">{feature.description}</p>
               <a
                 href="#"
                 onClick={(e) => e.preventDefault()}
-                className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 group/link"
+                className="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-primary-700 dark:text-primary-300 hover:text-primary-600 group/link"
               >
                 Learn more
                 <ChevronRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
@@ -494,26 +477,24 @@ const steps = [
 
 function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-20 lg:py-28 bg-white dark:bg-gray-900">
+    <section id="how-it-works" className="py-20 lg:py-28 bg-cream-100 dark:bg-ink-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full px-4 py-2 mb-4">
-            <Brain className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">How It Works</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Your Health Journey in{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              Four Steps
-            </span>
+          <Badge variant="accent" className="mb-4">
+            <Brain className="w-4 h-4" />
+            How It Works
+          </Badge>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-ink-900 dark:text-cream-100 mb-4">
+            Your health journey in{' '}
+            <em className="text-gradient-primary not-italic font-display italic">four steps</em>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-ink-500 dark:text-cream-400/70">
             Getting started is simple. Follow these steps to take control of your health.
           </p>
         </motion.div>
 
         <div className="relative">
-          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-200 via-emerald-200 to-blue-200 dark:from-blue-800 dark:via-emerald-800 dark:to-blue-800 -translate-y-1/2" />
+          <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-200 via-accent-200 to-primary-200 dark:from-primary-800 dark:via-accent-800 dark:to-primary-800 -translate-y-1/2" />
 
           <motion.div
             initial="initial"
@@ -529,18 +510,20 @@ function HowItWorksSection() {
                   whileInView: { opacity: 1, y: 0 },
                 }}
                 transition={{ duration: 0.5, delay: index * 0.15 }}
-                className="relative text-center"
+                className="relative text-center group"
               >
-                <div className="relative z-10">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <step.icon className="w-9 h-9 text-blue-600 dark:text-blue-400" />
+                <div className="relative z-10 inline-block">
+                  <div className="w-20 h-20 bg-white dark:bg-ink-800 rounded-2xl border border-cream-200 dark:border-ink-700 shadow-soft flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <step.icon className="w-9 h-9 text-primary-700 dark:text-primary-300" />
                   </div>
-                  <div className="absolute -top-2 -right-2 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 lg:-top-4 w-8 h-8 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                  <div className="absolute -top-2 -right-2 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 lg:-top-4 w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
                     {step.number}
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 mt-4">{step.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{step.description}</p>
+                <h3 className="heading-display text-xl font-semibold text-ink-900 dark:text-cream-100 mb-2 mt-4">
+                  {step.title}
+                </h3>
+                <p className="text-ink-500 dark:text-cream-400/70 leading-relaxed text-sm">{step.description}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -562,21 +545,19 @@ function StatisticsSection() {
   ]
 
   return (
-    <section className="py-20 lg:py-28 bg-gradient-to-br from-blue-600 to-emerald-700 relative overflow-hidden">
+    <section className="py-20 lg:py-28 gradient-primary relative overflow-hidden">
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-accent-300 rounded-full blur-3xl" />
       </div>
 
       <div ref={ref} className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-            Making Healthcare
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-emerald-200">
-              Smarter Every Day
-            </span>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-white mb-4">
+            Making healthcare{' '}
+            <em className="text-primary-100 not-italic font-display italic">smarter every day</em>
           </h2>
-          <p className="text-lg text-blue-100 max-w-2xl mx-auto">
+          <p className="text-lg text-primary-100 max-w-2xl mx-auto">
             Our growing community trusts MediAssist AI for their healthcare needs.
           </p>
         </motion.div>
@@ -590,14 +571,14 @@ function StatisticsSection() {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/15">
                 <stat.icon className="w-8 h-8 text-white" />
               </div>
               <div className="text-4xl lg:text-5xl font-bold text-white mb-1">
                 <Counter value={stat.value} isInView={isInView} />
                 {stat.suffix}
               </div>
-              <div className="text-blue-200">{stat.label}</div>
+              <div className="text-primary-100">{stat.label}</div>
             </motion.div>
           ))}
         </div>
@@ -670,20 +651,18 @@ const doctors = [
 
 function DoctorsSection() {
   return (
-    <section id="doctors" className="py-20 lg:py-28 bg-gray-50 dark:bg-gray-800/50">
+    <section id="doctors" className="py-20 lg:py-28 bg-white dark:bg-ink-900/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 rounded-full px-4 py-2 mb-4">
-            <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Our Doctors</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <Badge variant="primary" className="mb-4">
+            <Stethoscope className="w-4 h-4" />
+            Our Doctors
+          </Badge>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-ink-900 dark:text-cream-100 mb-4">
             Consult with{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              Expert Physicians
-            </span>
+            <em className="text-gradient-primary not-italic font-display italic">expert physicians</em>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-ink-500 dark:text-cream-400/70">
             Connect with experienced doctors across multiple specialties.
           </p>
         </motion.div>
@@ -702,22 +681,24 @@ function DoctorsSection() {
                 whileInView: { opacity: 1, y: 0 },
               }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 dark:border-gray-700 text-center"
+              className="card card-hover p-6 text-center"
             >
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-emerald-100 dark:from-blue-900/30 dark:to-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                <doctor.icon className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+              <div className="w-24 h-24 gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-lift">
+                <doctor.icon className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{doctor.name}</h3>
-              <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">{doctor.specialty}</p>
+              <h3 className="heading-display text-lg font-semibold text-ink-900 dark:text-cream-100">
+                {doctor.name}
+              </h3>
+              <p className="text-primary-700 dark:text-primary-300 text-sm font-semibold">{doctor.specialty}</p>
               <div className="flex items-center justify-center gap-1 mt-2">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{doctor.rating}</span>
-                <span className="text-gray-400 text-sm">({doctor.patients} patients)</span>
+                <Star className="w-4 h-4 fill-accent-400 text-accent-400" />
+                <span className="text-sm font-medium text-ink-700 dark:text-cream-200">{doctor.rating}</span>
+                <span className="text-ink-400 text-sm">({doctor.patients} patients)</span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{doctor.experience} experience</p>
+              <p className="text-sm text-ink-500 dark:text-cream-400/70 mt-1">{doctor.experience} experience</p>
               <Link
                 href="/register"
-                className="mt-4 inline-flex items-center justify-center gap-1 w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-emerald-700 transition-all duration-200"
+                className="mt-4 inline-flex items-center justify-center gap-1 w-full py-2.5 px-4 gradient-primary text-white rounded-xl text-sm font-semibold hover:opacity-90 transition-all duration-200 shadow-soft"
               >
                 Book Appointment
                 <Calendar className="w-4 h-4" />
@@ -756,20 +737,18 @@ const testimonials = [
 
 function TestimonialsSection() {
   return (
-    <section className="py-20 lg:py-28 bg-white dark:bg-gray-900">
+    <section className="py-20 lg:py-28 bg-cream-100 dark:bg-ink-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-amber-100 dark:bg-amber-900/30 rounded-full px-4 py-2 mb-4">
-            <Star className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">Testimonials</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            What Our{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              Users Say
-            </span>
+          <Badge variant="accent" className="mb-4">
+            <Star className="w-4 h-4" />
+            Testimonials
+          </Badge>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-ink-900 dark:text-cream-100 mb-4">
+            What our{' '}
+            <em className="text-gradient-primary not-italic font-display italic">users say</em>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-ink-500 dark:text-cream-400/70">
             Real stories from people who use MediAssist AI.
           </p>
         </motion.div>
@@ -788,26 +767,26 @@ function TestimonialsSection() {
                 whileInView: { opacity: 1, y: 0 },
               }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
-              className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 relative"
+              className="card p-8 relative card-hover"
             >
-              <div className="absolute top-6 right-6 text-6xl text-blue-200 dark:text-blue-800/40 font-serif leading-none">
+              <div className="absolute top-6 right-6 text-6xl text-primary-200 dark:text-primary-800/40 font-display leading-none">
                 &ldquo;
               </div>
               <div className="flex items-center gap-1 mb-4">
                 {Array.from({ length: t.rating }).map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="w-5 h-5 fill-accent-400 text-accent-400" />
                 ))}
               </div>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6 relative z-10">
+              <p className="text-ink-600 dark:text-cream-300/70 leading-relaxed mb-6 relative z-10">
                 {t.content}
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold">
                   {t.initials}
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</div>
-                  <div className="text-gray-500 dark:text-gray-400 text-xs">{t.role}</div>
+                  <div className="font-semibold text-ink-900 dark:text-cream-100 text-sm">{t.name}</div>
+                  <div className="text-ink-500 dark:text-cream-400/70 text-xs">{t.role}</div>
                 </div>
               </div>
             </motion.div>
@@ -845,20 +824,18 @@ function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   return (
-    <section id="faq" className="py-20 lg:py-28 bg-gray-50 dark:bg-gray-800/50">
+    <section id="faq" className="py-20 lg:py-28 bg-white dark:bg-ink-900/40">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div {...fadeInUp} className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-blue-100 dark:bg-blue-900/30 rounded-full px-4 py-2 mb-4">
-            <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">FAQ</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Frequently Asked{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              Questions
-            </span>
+          <Badge variant="primary" className="mb-4">
+            <MessageSquare className="w-4 h-4" />
+            FAQ
+          </Badge>
+          <h2 className="heading-display text-4xl sm:text-5xl font-semibold text-ink-900 dark:text-cream-100 mb-4">
+            Frequently asked{' '}
+            <em className="text-gradient-primary not-italic font-display italic">questions</em>
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-ink-500 dark:text-cream-400/70">
             Got questions? We&apos;ve got answers.
           </p>
         </motion.div>
@@ -877,20 +854,20 @@ function FAQSection() {
                 whileInView: { opacity: 1, y: 0 },
               }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
+              className="card overflow-hidden"
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="w-full flex items-center justify-between p-5 lg:p-6 text-left"
               >
-                <span className="text-base lg:text-lg font-medium text-gray-900 dark:text-white pr-4">
+                <span className="text-base lg:text-lg font-medium text-ink-900 dark:text-cream-100 pr-4">
                   {faq.question}
                 </span>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <ChevronDown className="w-5 h-5 text-ink-400 flex-shrink-0" />
                 </motion.div>
               </button>
               <AnimatePresence>
@@ -902,7 +879,7 @@ function FAQSection() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 lg:px-6 pb-5 lg:pb-6 text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="px-5 lg:px-6 pb-5 lg:pb-6 text-ink-500 dark:text-cream-400/70 leading-relaxed">
                       {faq.answer}
                     </p>
                   </motion.div>
@@ -918,37 +895,36 @@ function FAQSection() {
 
 function CTASection() {
   return (
-    <section className="py-20 lg:py-28 bg-white dark:bg-gray-900">
+    <section className="py-20 lg:py-28 bg-cream-100 dark:bg-ink-950">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="bg-gradient-to-br from-blue-600 to-emerald-700 rounded-3xl p-8 lg:p-16 relative overflow-hidden"
+          className="gradient-primary rounded-3xl p-8 lg:p-16 relative overflow-hidden shadow-lift"
         >
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent-300 rounded-full blur-3xl" />
           </div>
           <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-              Ready to Take Control of Your Health?
+            <h2 className="heading-display text-3xl sm:text-4xl lg:text-5xl font-semibold text-white mb-4">
+              Ready to take control of your health?
             </h2>
-            <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-primary-100 max-w-2xl mx-auto mb-8">
               Join thousands of users who trust MediAssist AI for smarter, faster healthcare guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 py-4 px-8 bg-white text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 shadow-xl hover:shadow-2xl"
-              >
-                Get Started Free
-                <ArrowRight className="w-5 h-5" />
+              <Link href="/register">
+                <Button size="lg" className="bg-white !text-primary-700 hover:!bg-cream-100 shadow-xl hover:shadow-2xl">
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
               </Link>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 py-4 px-8 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-200"
+                className="inline-flex items-center justify-center gap-2 py-3.5 px-8 border-2 border-white/30 text-white rounded-2xl font-semibold hover:bg-white/10 transition-all duration-200"
               >
                 Sign In
                 <ChevronRight className="w-5 h-5" />
@@ -962,18 +938,14 @@ function CTASection() {
 }
 
 function FooterSection() {
+  const mounted = useMounted()
   return (
-    <footer className="bg-gray-900 dark:bg-gray-950 text-gray-300">
+    <footer className="bg-ink-900 dark:bg-ink-950 text-cream-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-xl flex items-center justify-center">
-                <Stethoscope className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">MediAssist AI</span>
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            <Logo variant="light" />
+            <p className="text-cream-400/70 text-sm leading-relaxed mb-6 mt-4">
               Your intelligent healthcare companion for symptom checking, disease prediction, and connecting with expert doctors.
             </p>
             <div className="flex gap-3">
@@ -981,7 +953,7 @@ function FooterSection() {
                 <a
                   key={i}
                   href="#"
-                  className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
+                  className="w-9 h-9 bg-ink-800 dark:bg-ink-800/80 rounded-xl flex items-center justify-center hover:bg-primary-700 transition-colors"
                 >
                   <Icon className="w-4 h-4" />
                 </a>
@@ -1002,7 +974,11 @@ function FooterSection() {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className="text-sm text-cream-400/70 hover:text-white transition-colors"
                   >
                     {link.label}
                   </a>
@@ -1024,7 +1000,7 @@ function FooterSection() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-sm text-gray-400 hover:text-white transition-colors"
+                    className="text-sm text-cream-400/70 hover:text-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -1036,15 +1012,15 @@ function FooterSection() {
           <div>
             <h3 className="text-white font-semibold mb-4">Contact</h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-sm text-gray-400">
+              <li className="flex items-start gap-3 text-sm text-cream-400/70">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 123 Healthcare Ave, Medical District
               </li>
-              <li className="flex items-center gap-3 text-sm text-gray-400">
+              <li className="flex items-center gap-3 text-sm text-cream-400/70">
                 <Mail className="w-4 h-4 flex-shrink-0" />
                 support@mediassistai.com
               </li>
-              <li className="flex items-center gap-3 text-sm text-gray-400">
+              <li className="flex items-center gap-3 text-sm text-cream-400/70">
                 <Phone className="w-4 h-4 flex-shrink-0" />
                 +1 (555) 123-4567
               </li>
@@ -1052,17 +1028,17 @@ function FooterSection() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800">
+        <div className="mt-12 pt-8 border-t border-ink-800">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500 text-center lg:text-left">
-              &copy; {new Date().getFullYear()} MediAssist AI. All rights reserved.
+            <p className="text-sm text-cream-400/60 text-center lg:text-left">
+              &copy; {mounted ? new Date().getFullYear() : 2024} MediAssist AI. All rights reserved.
             </p>
-            <div className="flex items-start gap-2 text-xs text-gray-500 max-w-2xl">
-              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div className="flex items-start gap-2 text-xs text-cream-400/60 max-w-2xl">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-accent-400" />
               <p>
-                <strong className="text-gray-400">Medical Disclaimer:</strong> This application is for educational purposes only. 
-                It is not a substitute for professional medical advice. Always consult a qualified healthcare provider for medical decisions. 
-                <Link href="/disclaimer" className="text-blue-400 hover:underline ml-1">Read full disclaimer</Link>
+                <strong className="text-cream-200">Medical Disclaimer:</strong> This application is for educational purposes only.
+                It is not a substitute for professional medical advice. Always consult a qualified healthcare provider for medical decisions.
+                <Link href="/disclaimer" className="text-primary-300 hover:underline ml-1">Read full disclaimer</Link>
               </p>
             </div>
           </div>
