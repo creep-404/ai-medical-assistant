@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, datetime
 from enum import Enum
@@ -56,7 +56,17 @@ class DiseaseResponse(BaseModel):
 
 
 class PredictionRequest(BaseModel):
-    symptoms: List[str]
+    symptoms: List[str] = Field(..., min_length=1, max_length=10)
+
+    @field_validator("symptoms")
+    @classmethod
+    def validate_symptom_length(cls, symptoms: List[str]) -> List[str]:
+        for s in symptoms:
+            if not s or not s.strip():
+                raise ValueError("Symptoms cannot be empty")
+            if len(s) > 100:
+                raise ValueError("Each symptom must be 100 characters or fewer")
+        return [s.strip() for s in symptoms]
 
 
 class TopPrediction(BaseModel):
@@ -87,21 +97,22 @@ class PredictionResponse(BaseModel):
 
 
 class AppointmentCreate(BaseModel):
-    doctor_id: int
+    doctor_id: int = Field(..., gt=0)
     date: date
-    time: str
-    reason: Optional[str] = None
-    notes: Optional[str] = None
-    clinic: Optional[str] = None
+    time: str = Field(..., min_length=1, max_length=10)
+    reason: Optional[str] = Field(default=None, max_length=2000)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+    clinic: Optional[str] = Field(default=None, max_length=255)
 
 
 class AppointmentUpdate(BaseModel):
+    # Status is intentionally absent: status transitions happen only through
+    # dedicated doctor (accept/reject/complete) and patient (cancel) endpoints.
     date: Optional[date] = None
-    time: Optional[str] = None
-    reason: Optional[str] = None
-    status: Optional[AppointmentStatus] = None
-    notes: Optional[str] = None
-    clinic: Optional[str] = None
+    time: Optional[str] = Field(default=None, min_length=1, max_length=10)
+    reason: Optional[str] = Field(default=None, max_length=2000)
+    notes: Optional[str] = Field(default=None, max_length=2000)
+    clinic: Optional[str] = Field(default=None, max_length=255)
 
 
 class AppointmentResponse(BaseModel):
@@ -125,7 +136,7 @@ class AppointmentResponse(BaseModel):
 
 
 class GeocodeRequest(BaseModel):
-    city: str
+    city: str = Field(..., min_length=1, max_length=200)
 
 
 class GeocodeResponse(BaseModel):
@@ -135,11 +146,11 @@ class GeocodeResponse(BaseModel):
 
 
 class NearbySearchRequest(BaseModel):
-    lat: float
-    lng: float
-    radius_km: float = 5.0
-    place_type: Optional[str] = "all"
-    specialty: Optional[str] = None
+    lat: float = Field(..., ge=-90, le=90)
+    lng: float = Field(..., ge=-180, le=180)
+    radius_km: float = Field(default=5.0, ge=0.1, le=50)
+    place_type: Optional[str] = Field(default="all", max_length=50)
+    specialty: Optional[str] = Field(default=None, max_length=100)
 
 
 class NearbyPlaceResponse(BaseModel):
@@ -177,8 +188,8 @@ class AppointmentStatsResponse(BaseModel):
 
 
 class MedicineReminderCreate(BaseModel):
-    medicine_name: str
-    dosage: Optional[str] = None
+    medicine_name: str = Field(..., min_length=1, max_length=255)
+    dosage: Optional[str] = Field(default=None, max_length=255)
     morning: bool = False
     afternoon: bool = False
     night: bool = False

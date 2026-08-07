@@ -19,7 +19,7 @@ This guide deploys the MediAssist AI stack to production:
    migration `dd0c2604dca8` creates all 13 tables and both enum types (`userrole`,
    `appointmentstatus`). Verified to compile for PostgreSQL.
 3. **Railway config** — `railway.json` + `Procfile` + fixed `Dockerfile`. Startup runs
-   `alembic upgrade head && seed && uvicorn`.
+   `alembic upgrade head && uvicorn`. Seed data is NEVER created in production.
 4. **Vercel config** — production build verified (32 static pages), `NEXT_PUBLIC_API_URL`
    is env-driven, dev-only `console.log` debug output removed.
 5. **CORS** — origins now come from the `CORS_ORIGINS` env var (was hardcoded).
@@ -50,14 +50,18 @@ This guide deploys the MediAssist AI stack to production:
 1. In the same Railway project, click **+ New** → **GitHub Repo** and pick your repo.
 2. Railway reads `railway.json` at the repo root:
    - **Build**: `DOCKERFILE` at `Dockerfile`
-   - **Start**: `alembic upgrade head && python -m backend.services.seed_service && uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+   - **Start**: `alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
    - **Healthcheck**: `/health`
 3. If Railway doesn't auto-detect the Dockerfile, set **Settings → Root Directory** to `/`
    (repo root) and **Build Command** to `dockerfile`.
 4. **Attach the database**: Variables tab → **Add Reference** → select the PostgreSQL
    plugin's `DATABASE_URL`. This injects the connection string automatically.
 5. Add the remaining variables (Section 3.3).
-6. Click **Deploy**. Railway builds the image, runs migrations + seed, then starts the API.
+6. Click **Deploy**. Railway builds the image and runs migrations, then starts the API.
+
+> On first deploy, create the administrator account by setting `BOOTSTRAP_ADMIN_EMAIL`,
+> `BOOTSTRAP_ADMIN_USERNAME`, and `BOOTSTRAP_ADMIN_PASSWORD`. The app creates that admin
+> once on startup. Remove those variables afterwards.
 
 ### 3.3 Backend environment variables (Railway)
 
@@ -66,9 +70,16 @@ This guide deploys the MediAssist AI stack to production:
 | `DATABASE_URL` | `postgresql://...` (from plugin) | Add as a **reference** to the Postgres plugin |
 | `SECRET_KEY` | `<64-char random string>` | Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
 | `ALGORITHM` | `HS256` | |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | `7` | |
 | `CORS_ORIGINS` | `https://mediassist.dpdns.org,https://mediassist-ai.vercel.app` | Include the Vercel preview domain too if desired |
+| `COOKIE_SECURE` | `true` | Set to `true` in production over HTTPS |
+| `COOKIE_SAMESITE` | `lax` | Set `none` only if frontend/API are on different sites AND you accept the extra risk; requires `COOKIE_SECURE=true` |
+| `FRONTEND_URL` | `https://mediassist.dpdns.org` | Used to build password-reset links in emails |
+| `BOOTSTRAP_ADMIN_EMAIL` | `admin@example.com` | Creates the first admin on startup; remove after use |
+| `BOOTSTRAP_ADMIN_USERNAME` | `admin` | see above |
+| `BOOTSTRAP_ADMIN_PASSWORD` | `<strong password>` | see above |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_TLS` | (optional) | Needed for password-reset emails; without them reset links are generated but not delivered |
 | `PORT` | `8000` | Railway sets this automatically |
 
 > Never commit secrets. `backend/.env` is git-ignored; Railway variables are set in the
@@ -185,21 +196,21 @@ nslookup api.mediassist.dpdns.org
 - [ ] `https://mediassist.dpdns.org` loads (frontend)
 - [ ] `https://api.mediassist.dpdns.org/health` returns `{"status":"healthy",...}`
 - [ ] `https://api.mediassist.dpdns.org/docs` opens Swagger
-- [ ] Register a user → login works (JWT issued)
+- [ ] Register a user → login works (HttpOnly cookie session issued)
 - [ ] Symptom Checker returns a prediction
-- [ ] Book an appointment; approve it as `dr.smith` (`doctor123`)
+- [ ] Log in as the bootstrap admin → create + approve a doctor account
+- [ ] Book an appointment with that doctor; accept it from the doctor account
 - [ ] Generate & download a PDF report
 - [ ] Nearby doctors / emergency hospitals return data
 - [ ] `CORS_ORIGINS` includes your frontend domain (otherwise browser blocks API calls)
+- [ ] `COOKIE_SECURE=true` is set (otherwise cookies are dropped on HTTPS)
 
 ---
 
 ## 8. Keeping local development working
 
-No changes to your normal workflow:
-
 ```bash
-# Backend (uses SQLite fallback; creates + seeds tables automatically)
+# Backend (uses SQLite fallback; tables auto-create. No seed runs automatically.)
 cd backend
 python -m uvicorn backend.main:app --reload
 
@@ -208,13 +219,19 @@ cd frontend
 npm run dev
 ```
 
+To seed demo doctors/symptoms locally (SQLite only), run explicitly:
+
+```bash
+cd backend
+python -m backend.services.seed_service
+```
+
 To run locally against PostgreSQL instead of SQLite:
 
 ```bash
 cd backend
 $env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/mediassist"   # Windows
 alembic upgrade head
-python -m backend.services.seed_service
 python -m uvicorn backend.main:app --reload
 ```
 
@@ -236,8 +253,16 @@ python -m uvicorn backend.main:app --reload
 
 ## 10. Security notes
 
-- `SECRET_KEY` must be a long random value, never the default.
-- JWT tokens expire (30 min access / 7 day refresh) and are verified server-side.
-- Passwords are bcrypt-hashed.
-- All API routes (except auth) require a valid bearer token.
+- `SECRET_KEY` must be a long random value; the app refuses to start otherwise.
+- Auth uses short-lived access tokens (15 min) + rotating refresh tokens (7 days), both
+  delivered as **HttpOnly, SameSite cookies** (not readable by JavaScript). Refresh-token
+  reuse is detected and revokes the whole session; logout invalidates all tokens.
+- Passwords are bcrypt-hashed (with a SHA-256 pre-hash so long passwords are never
+  silently truncated) and must meet a strength policy (min 12 chars, no common/weak values).
+- Self-registration always creates a `patient`. Doctors are created and approved only by
+  admins; admins are bootstrapped via env config.
+- Password-reset tokens are random, single-use, stored only as hashes, and expire in 30
+  minutes.
+- Login/register/refresh/forgot/predict/nearby are rate-limited per IP with account lockout.
+- All API routes (except public doctor lookup and auth) require authentication.
 - Keep `DATABASE_URL` credentials out of source control.

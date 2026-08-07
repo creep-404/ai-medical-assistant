@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from backend.database.database import get_db
@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get("/symptoms", response_model=List[SymptomResponse])
 def list_symptoms(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     symptoms = db.query(Symptom).offset(skip).limit(limit).all()

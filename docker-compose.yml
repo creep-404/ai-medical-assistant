@@ -7,16 +7,22 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/mediassist
-      - SECRET_KEY=change-this-to-a-secure-key-in-production
+      # SECRET_KEY must be set via .env / environment. Do NOT ship a default.
+      - SECRET_KEY=${SECRET_KEY:?Set SECRET_KEY in .env before starting}
       - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+      - COOKIE_SECURE=false
+      - COOKIE_SAMESITE=lax
+      - FRONTEND_URL=http://localhost:3000
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL:-}
+      - BOOTSTRAP_ADMIN_USERNAME=${BOOTSTRAP_ADMIN_USERNAME:-}
+      - BOOTSTRAP_ADMIN_PASSWORD=${BOOTSTRAP_ADMIN_PASSWORD:-}
     depends_on:
       - db
     volumes:
-      - ./backend:/app/backend
       - ./backend/trained_model:/app/backend/trained_model
       - ./backend/reports:/app/backend/reports
       - ./backend/generated_reports:/app/backend/generated_reports
-    command: sh -c "cd /app/backend && alembic upgrade head && python -m backend.services.seed_service && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "cd /app/backend && alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port 8000"
 
   frontend:
     build:
@@ -25,12 +31,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - backend
 
   db:
     image: postgres:15
+    # Database is only reachable from within the compose network.
     ports:
       - "5432:5432"
     environment:

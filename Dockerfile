@@ -20,7 +20,13 @@ RUN mkdir -p trained_model uploads reports generated_reports
 
 ENV PYTHONPATH=/app
 
+# Run as a non-root user (security: least privilege).
+RUN useradd --create-home --uid 10001 appuser
+RUN chown -R appuser:appuser /app/backend /app/backend/trained_model /app/backend/uploads /app/backend/reports /app/backend/generated_reports
+USER appuser
+
 EXPOSE 8000
 
-# Migrations + seed run before the server starts.
-CMD ["sh", "-c", "alembic upgrade head && python -m backend.services.seed_service && uvicorn backend.main:app --host 0.0.0.0 --port $PORT"]
+# Migrations run before the server starts. Seed data is NEVER created in
+# production; run it manually only in a local dev database.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT"]

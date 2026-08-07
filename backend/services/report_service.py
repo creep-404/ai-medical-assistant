@@ -14,8 +14,17 @@ from backend.models.user import User
 from backend.models.medical import Prediction, Disease, MedicalReport
 from backend.ml.predict import get_disease_details
 
+from html import escape as _xml_escape
+
 REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "generated_reports")
 os.makedirs(REPORTS_DIR, exist_ok=True)
+
+
+def _p(text) -> str:
+    """Escape user/DB-sourced content so reportlab Paragraph cannot parse injected tags."""
+    if text is None:
+        return ""
+    return _xml_escape(str(text))
 
 
 def generate_report(prediction_id: int, patient_id: int, db: Session) -> Optional[MedicalReport]:
@@ -70,9 +79,9 @@ def generate_report(prediction_id: int, patient_id: int, db: Session) -> Optiona
     elements.append(Spacer(1, 0.15 * inch))
 
     patient_data = [
-        ["Patient Name", patient.full_name],
+        ["Patient Name", _p(patient.full_name)],
         ["Patient ID", str(patient.id)],
-        ["Email", patient.email],
+        ["Email", _p(patient.email)],
         ["Report Date", report_date],
     ]
     patient_table = Table(patient_data, colWidths=[2 * inch, 4 * inch])
@@ -93,12 +102,12 @@ def generate_report(prediction_id: int, patient_id: int, db: Session) -> Optiona
     elements.append(Paragraph("Symptoms", heading_style))
     symptoms_list = prediction.symptoms.split(",") if prediction.symptoms else []
     for symptom in symptoms_list:
-        elements.append(Paragraph(f"• {symptom.strip()}", normal_style))
+        elements.append(Paragraph(f"• {_p(symptom)}", normal_style))
     elements.append(Spacer(1, 0.15 * inch))
 
     elements.append(Paragraph("Prediction Results", heading_style))
     result_data = [
-        ["Predicted Condition", prediction.predicted_disease or "Not identified"],
+        ["Predicted Condition", _p(prediction.predicted_disease or "Not identified")],
         ["Confidence Level", f"{prediction.confidence * 100:.1f}%" if prediction.confidence else "N/A"],
         ["Emergency Case", "Yes" if prediction.was_emergency else "No"],
     ]
@@ -119,43 +128,43 @@ def generate_report(prediction_id: int, patient_id: int, db: Session) -> Optiona
     if disease_details:
         if disease_details.get("description"):
             elements.append(Paragraph("Description", heading_style))
-            elements.append(Paragraph(disease_details["description"], normal_style))
+            elements.append(Paragraph(_p(disease_details["description"]), normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("causes"):
             elements.append(Paragraph("Possible Causes", heading_style))
-            elements.append(Paragraph(disease_details["causes"], normal_style))
+            elements.append(Paragraph(_p(disease_details["causes"]), normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("treatment"):
             elements.append(Paragraph("Treatment", heading_style))
-            elements.append(Paragraph(disease_details["treatment"], normal_style))
+            elements.append(Paragraph(_p(disease_details["treatment"]), normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("medicines"):
             elements.append(Paragraph("Recommended Medicines", heading_style))
             for med in disease_details["medicines"]:
-                med_text = f"• {med['name']}"
+                med_text = f"• {_p(med['name'])}"
                 if med.get("dosage"):
-                    med_text += f" - {med['dosage']}"
+                    med_text += f" - {_p(med['dosage'])}"
                 if med.get("usage_instructions"):
-                    med_text += f" ({med['usage_instructions']})"
+                    med_text += f" ({_p(med['usage_instructions'])})"
                 elements.append(Paragraph(med_text, normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("precautions"):
             elements.append(Paragraph("Precautions", heading_style))
-            elements.append(Paragraph(disease_details["precautions"], normal_style))
+            elements.append(Paragraph(_p(disease_details["precautions"]), normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("diet_suggestions"):
             elements.append(Paragraph("Diet Suggestions", heading_style))
-            elements.append(Paragraph(disease_details["diet_suggestions"], normal_style))
+            elements.append(Paragraph(_p(disease_details["diet_suggestions"]), normal_style))
             elements.append(Spacer(1, 0.1 * inch))
 
         if disease_details.get("when_to_see_doctor"):
             elements.append(Paragraph("When to See a Doctor", heading_style))
-            elements.append(Paragraph(disease_details["when_to_see_doctor"], normal_style))
+            elements.append(Paragraph(_p(disease_details["when_to_see_doctor"]), normal_style))
 
     elements.append(Spacer(1, 0.3 * inch))
     disclaimer = Paragraph(

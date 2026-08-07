@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: { username: string; password: string }) => Promise<void>;
+  login: (data: { username: string; password: string }) => Promise<User>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -26,14 +26,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
+    let cancelled = false;
+    authService
+      .getCurrentUser()
+      .then((currentUser) => {
+        if (!cancelled) setUser(currentUser);
+      })
+      .catch(() => {
+        // not authenticated (or session expired); keep user null
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (data: { username: string; password: string }) => {
     const response = await authService.login(data);
     setUser(response.user);
+    return response.user;
   };
 
   const register = async (data: any) => {

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
@@ -14,11 +14,21 @@ from backend.schemas.medical import (
     PredictionStatsResponse,
 )
 from backend.auth.auth_handler import get_current_user
+from backend.auth.rate_limiter import make_predict_limiter, client_ip
 from backend.ml.predict import predict_disease, get_disease_details
 from backend.ml.emergency_detector import check_emergency
 from backend.services.specialist_service import get_specialist_for_disease
 
 router = APIRouter()
+
+_predict_limiter = None
+
+
+def _get_predict_limiter():
+    global _predict_limiter
+    if _predict_limiter is None:
+        _predict_limiter = make_predict_limiter()
+    return _predict_limiter
 
 
 def _split_text(text) -> List[str]:
@@ -29,19 +39,22 @@ def _split_text(text) -> List[str]:
 
 @router.post("/predict", response_model=PredictionResponse)
 def predict(
-    request: PredictionRequest,
+    request: Request,
+    prediction_request: PredictionRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if not request.symptoms:
+    _get_predict_limiter().check(client_ip(request))
+
+    if not prediction_request.symptoms:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one symptom is required",
         )
 
-    is_emergency, emergency_message = check_emergency(request.symptoms)
+    is_emergency, emergency_message = check_emergency(prediction_request.symptoms)
 
-    symptoms_str = ",".join(request.symptoms)
+    symptoms_str = ",".join(prediction_request.symptoms)
 
     if is_emergency:
         prediction = Prediction(
@@ -64,7 +77,7 @@ def predict(
             emergency_message=emergency_message,
         )
 
-    result = predict_disease(request.symptoms, db)
+    result = predict_disease(prediction_request.symptoms, db)
 
     top_predictions = []
     if result.get("top_predictions"):
@@ -89,7 +102,7 @@ def predict(
         details = get_disease_details(result["predicted_disease"], db)
 
     specialist_info = get_specialist_for_disease(
-        result.get("predicted_disease"), request.symptoms
+        result.get("predicted_disease"), prediction_request.symptoms
     )
 
     return PredictionResponse(
@@ -116,8 +129,8 @@ def predict(
 
 @router.get("/history", response_model=List[PredictionHistoryResponse])
 def get_history(
-    skip: int = 0,
-    limit: int = 20,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=200),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

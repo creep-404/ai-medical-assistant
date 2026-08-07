@@ -7,42 +7,45 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
+let refreshPromise: Promise<any> | null = null;
+
+function redirectToLogin() {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    window.location.href = '/login';
   }
-  return config;
-});
+}
+
+async function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(`${API_BASE_URL}/api/auth/refresh`, {}, { withCredentials: true })
+      .then((response) => response.data)
+      .catch((err) => {
+        redirectToLogin();
+        throw err;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    // Retry once per request after a silent refresh. HttpOnly cookies are sent
+    // automatically, so no token needs to be stored or attached on the client.
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
-            refresh_token: refreshToken,
-          });
-          const { access_token } = response.data;
-          localStorage.setItem('access_token', access_token);
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
-        }
+        await refreshSession();
+        return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
-        }
         return Promise.reject(refreshError);
       }
     }

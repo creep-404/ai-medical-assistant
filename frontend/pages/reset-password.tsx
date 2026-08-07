@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
   const validate = () => {
     const errs: Record<string, string> = {}
     if (!form.password) errs.password = 'New password is required'
-    else if (form.password.length < 6) errs.password = 'Password must be at least 6 characters'
+    else if (form.password.length < 12) errs.password = 'Password must be at least 12 characters'
     if (!form.confirmPassword) errs.confirmPassword = 'Please confirm your password'
     else if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match'
     setErrors(errs)

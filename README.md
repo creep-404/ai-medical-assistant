@@ -180,7 +180,7 @@ cp ../.env.example .env
 # (Optional) For a fresh database, run Alembic migrations:
 alembic upgrade head
 
-# Seed the database (also runs automatically at first startup with SQLite)
+# Seed the database with demo doctors/symptoms (SQLite only). Optional.
 python -m backend.services.seed_service
 
 # Run the backend

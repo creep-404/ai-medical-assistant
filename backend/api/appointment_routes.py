@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -112,8 +112,8 @@ def book_appointment(
 
 @router.get("/appointments", response_model=List[AppointmentResponse])
 def list_appointments(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -130,8 +130,8 @@ def list_appointments(
 
 @router.get("/appointments/doctor", response_model=List[AppointmentResponse])
 def get_doctor_appointments(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -154,8 +154,8 @@ def get_doctor_appointments(
 
 @router.get("/appointments/all", response_model=List[AppointmentResponse])
 def get_all_appointments(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -248,8 +248,6 @@ def update_appointment(
         appointment.time = update_data.time
     if update_data.reason is not None:
         appointment.reason = update_data.reason
-    if update_data.status is not None:
-        appointment.status = update_data.status
     if update_data.notes is not None:
         appointment.notes = update_data.notes
     if update_data.clinic is not None:

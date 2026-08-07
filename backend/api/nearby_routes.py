@@ -1,9 +1,10 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from backend.auth.auth_handler import get_current_user
+from backend.auth.rate_limiter import make_nearby_limiter, client_ip
 from backend.database.database import get_db
 from backend.models.user import DoctorProfile, User, UserRole
 from backend.schemas.medical import (
@@ -27,61 +28,64 @@ logger = logging.getLogger("nearby_routes")
 
 router = APIRouter()
 
+_nearby_limiter = None
+
+
+def _get_nearby_limiter():
+    global _nearby_limiter
+    if _nearby_limiter is None:
+        _nearby_limiter = make_nearby_limiter()
+    return _nearby_limiter
+
 
 @router.post("/nearby/geocode", response_model=GeocodeResponse)
 def geocode_location(
-    request: GeocodeRequest,
+    request: Request,
+    geocode_data: GeocodeRequest,
     current_user: User = Depends(get_current_user),
 ):
-    if not request.city or not request.city.strip():
+    _get_nearby_limiter().check(client_ip(request))
+    if not geocode_data.city or not geocode_data.city.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="City name is required",
         )
-    logger.info("nearby/geocode request: city=%s", request.city.strip())
-    result = geocode_city(request.city.strip())
+    result = geocode_city(geocode_data.city.strip())
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find that location. Please try another city.",
         )
-    logger.info("nearby/geocode response: %s", result)
     return result
 
 
 @router.post("/nearby/search", response_model=List[NearbyPlaceResponse])
 def nearby_search(
-    request: NearbySearchRequest,
+    request: Request,
+    search_data: NearbySearchRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    logger.info(
-        "nearby/search request: lat=%s lng=%s radius_km=%s place_type=%s specialty=%s",
-        request.lat,
-        request.lng,
-        request.radius_km,
-        request.place_type,
-        request.specialty,
-    )
+    _get_nearby_limiter().check(client_ip(request))
     try:
         places = search_nearby(
-            request.lat,
-            request.lng,
-            request.radius_km,
-            request.place_type or "all",
-            request.specialty,
+            search_data.lat,
+            search_data.lng,
+            search_data.radius_km,
+            search_data.place_type or "all",
+            search_data.specialty,
         )
     except NearbySearchError as exc:
         logger.error("nearby/search failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Hospital/location search service unavailable: {exc}",
+            detail="Hospital/location search service is temporarily unavailable",
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("nearby/search unexpected error: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Nearby search failed: {exc}",
+            detail="Nearby search service is temporarily unavailable",
         )
 
     registered_doctors = (
@@ -98,9 +102,9 @@ def nearby_search(
 
     for profile in registered_doctors:
         distance = haversine(
-            request.lat, request.lng, profile.lat, profile.lng
+            search_data.lat, search_data.lng, profile.lat, profile.lng
         )
-        if distance <= request.radius_km:
+        if distance <= search_data.radius_km:
             places.append(
                 {
                     "name": profile.user.full_name,
@@ -122,7 +126,6 @@ def nearby_search(
 
     places.sort(key=lambda x: x["distance_km"])
     response = places[:50]
-    logger.info("nearby/search response: %d places", len(response))
     return response
 
 

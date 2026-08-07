@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from backend.database.database import get_db
@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.get("/medicines", response_model=List[MedicineResponse])
 def list_medicines(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     medicines = db.query(Medicine).offset(skip).limit(limit).all()

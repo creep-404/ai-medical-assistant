@@ -143,6 +143,16 @@ def _query_overpass(query: str, lat: float, lng: float) -> List[Dict]:
     return []
 
 
+def _safe_website(url: Optional[str]) -> Optional[str]:
+    """Only return http(s) URLs. Anything else (javascript:, data:, etc.) is dropped."""
+    if not url:
+        return None
+    url = url.strip()
+    if url.lower().startswith(("http://", "https://")):
+        return url[:500]
+    return None
+
+
 def _extract_tag_value(tags: Dict, *keys: str) -> Optional[str]:
     for key in keys:
         value = tags.get(key)
@@ -228,7 +238,7 @@ def search_nearby(
                 "address": address or "Address not available",
                 "phone": _extract_tag_value(tags, "phone", "contact:phone", "emergency:phone", "healthcare:phone"),
                 "opening_hours": _extract_tag_value(tags, "opening_hours", "service_times"),
-                "website": _extract_tag_value(tags, "website", "contact:website", "url"),
+                "website": _safe_website(_extract_tag_value(tags, "website", "contact:website", "url")),
                 "rating": rating,
                 "lat": float(lat2),
                 "lng": float(lon2),

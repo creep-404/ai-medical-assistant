@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Lock, Eye, EyeOff, Stethoscope, UserPlus, AlertTriangle } from 'lucide-react'
+import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertTriangle } from 'lucide-react'
 import { authService } from '@/services/auth.service'
 import toast from 'react-hot-toast'
 import { AuthLayout } from '@/components/layout/AuthLayout'
@@ -22,7 +22,6 @@ export default function RegisterPage() {
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'patient',
     acceptTerms: false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -35,7 +34,7 @@ export default function RegisterPage() {
     if (!form.username.trim()) errs.username = 'Username is required'
     else if (form.username.length < 3) errs.username = 'Username must be at least 3 characters'
     if (!form.password) errs.password = 'Password is required'
-    else if (form.password.length < 6) errs.password = 'Password must be at least 6 characters'
+    else if (form.password.length < 12) errs.password = 'Password must be at least 12 characters'
     if (!form.confirmPassword) errs.confirmPassword = 'Please confirm your password'
     else if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match'
     if (!form.acceptTerms) errs.acceptTerms = 'You must accept the terms and conditions'
@@ -53,7 +52,6 @@ export default function RegisterPage() {
         email: form.email,
         username: form.username,
         password: form.password,
-        role: form.role,
       })
       toast.success('Registration successful! Please sign in.')
       router.push('/login')
@@ -190,38 +188,6 @@ export default function RegisterPage() {
             <FieldError>{errors.confirmPassword}</FieldError>
           </Field>
         </div>
-
-        <Field>
-          <Label>I am a</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => updateField('role', 'patient')}
-              className={cn(
-                'py-3 px-4 rounded-xl border text-center transition-all',
-                form.role === 'patient'
-                  ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-soft'
-                  : 'border-cream-300 dark:border-ink-700 bg-white dark:bg-ink-900 text-ink-500 dark:text-cream-400/70 hover:border-primary-400'
-              )}
-            >
-              <User className="w-5 h-5 mx-auto mb-1" />
-              <span className="text-sm font-semibold">Patient</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => updateField('role', 'doctor')}
-              className={cn(
-                'py-3 px-4 rounded-xl border text-center transition-all',
-                form.role === 'doctor'
-                  ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-soft'
-                  : 'border-cream-300 dark:border-ink-700 bg-white dark:bg-ink-900 text-ink-500 dark:text-cream-400/70 hover:border-primary-400'
-              )}
-            >
-              <Stethoscope className="w-5 h-5 mx-auto mb-1" />
-              <span className="text-sm font-semibold">Doctor</span>
-            </button>
-          </div>
-        </Field>
 
         <Field>
           <label className="flex items-start gap-2 cursor-pointer">

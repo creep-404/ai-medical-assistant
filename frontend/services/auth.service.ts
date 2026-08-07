@@ -5,7 +5,6 @@ interface RegisterData {
   username: string;
   password: string;
   full_name: string;
-  role: string;
 }
 
 interface LoginData {
@@ -15,34 +14,26 @@ interface LoginData {
 
 export const authService = {
   async register(data: RegisterData) {
+    // role is intentionally absent: the server always creates patient accounts.
     const response = await api.post('/api/auth/register', data);
     return response.data;
   },
 
   async login(data: LoginData) {
     const response = await api.post('/api/auth/login', data);
-    if (response.data.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('refresh_token', response.data.refresh_token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
     return response.data;
   },
 
   async logout() {
     try {
       await api.post('/api/auth/logout');
-    } finally {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
+    } catch (err) {
+      // session may already be gone; swallow so the client always clears state
     }
   },
 
-  async refreshToken(refreshToken: string) {
-    const response = await api.post('/api/auth/refresh', {
-      refresh_token: refreshToken,
-    });
+  async getCurrentUser() {
+    const response = await api.get('/api/auth/me');
     return response.data;
   },
 
@@ -57,20 +48,5 @@ export const authService = {
       password,
     });
     return response.data;
-  },
-
-  getCurrentUser() {
-    if (typeof window !== 'undefined') {
-      const user = localStorage.getItem('user');
-      return user ? JSON.parse(user) : null;
-    }
-    return null;
-  },
-
-  isAuthenticated() {
-    if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('access_token');
-    }
-    return false;
   },
 };

@@ -21,6 +21,9 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     role = Column(Enum(UserRole, name="userrole"), default=UserRole.patient, nullable=False)
     is_active = Column(Boolean, default=True)
+    token_version = Column(Integer, default=0, nullable=False)
+    reset_token_hash = Column(String(64), nullable=True)
+    reset_token_expires_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -32,6 +35,21 @@ class User(Base):
     medicine_reminders = relationship("MedicineReminder", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     medical_reports = relationship("MedicalReport", back_populates="patient", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class RefreshToken(Base):
+    """Server-side record of issued refresh tokens for rotation and revocation."""
+
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="refresh_tokens")
 
 
 class PatientProfile(Base):

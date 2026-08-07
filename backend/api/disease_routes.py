@@ -10,9 +10,9 @@ router = APIRouter()
 
 @router.get("/diseases", response_model=List[DiseaseResponse])
 def list_diseases(
-    skip: int = 0,
-    limit: int = 50,
-    search: Optional[str] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    search: Optional[str] = Query(None, max_length=200),
     db: Session = Depends(get_db),
 ):
     query = db.query(Disease)

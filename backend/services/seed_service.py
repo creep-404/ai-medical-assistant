@@ -619,6 +619,15 @@ def seed_doctors(db: Session):
 
 
 def run_seed():
+    from backend.database.database import database_url, _is_sqlite
+
+    # Safety guard: seeding creates demo doctors with weak passwords. It is a
+    # local-development convenience only and must never run against a real DB.
+    if not _is_sqlite(database_url):
+        raise RuntimeError(
+            "Refusing to seed: seed data must only be created in a local SQLite "
+            "development database."
+        )
     db = SessionLocal()
     try:
         seed_symptoms(db)

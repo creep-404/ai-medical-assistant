@@ -33,8 +33,7 @@ export default function LoginPage() {
     if (!validate()) return
     setLoading(true)
     try {
-      await login({ username: form.username, password: form.password })
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const user = await login({ username: form.username, password: form.password })
       toast.success('Login successful!')
       router.push(getDashboardPath(user.role))
     } catch (err: any) {
