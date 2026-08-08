@@ -1,4 +1,11 @@
-from backend.models.user import User, UserRole, PatientProfile, DoctorProfile
+from backend.models.user import (
+    User,
+    UserRole,
+    PatientProfile,
+    DoctorProfile,
+    RefreshToken,
+    OAuthAccount,
+)
 from backend.models.medical import (
     Symptom,
     Disease,
@@ -25,4 +32,6 @@ __all__ = [
     "MedicineReminder",
     "Notification",
     "AppointmentStatus",
+    "RefreshToken",
+    "OAuthAccount",
 ]

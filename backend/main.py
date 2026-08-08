@@ -9,6 +9,7 @@ from backend.models.user import User, UserRole
 from backend.auth.auth_handler import hash_password
 from backend.api import (
     auth_routes,
+    oauth_routes,
     admin_routes,
     prediction_routes,
     appointment_routes,
@@ -105,6 +106,7 @@ if _is_sqlite(database_url):
 _create_bootstrap_admin()
 
 app.include_router(auth_routes.router, prefix="/api/auth", tags=["Authentication"])
+app.include_router(oauth_routes.router, prefix="/api/auth", tags=["OAuth"])
 app.include_router(admin_routes.router, prefix="/api", tags=["Admin"])
 app.include_router(prediction_routes.router, prefix="/api", tags=["Prediction"])
 app.include_router(appointment_routes.router, prefix="/api", tags=["Appointments"])

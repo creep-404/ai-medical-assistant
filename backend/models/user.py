@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Enum, ForeignKey, Date, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Enum, ForeignKey, Date, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -36,6 +36,7 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     medical_reports = relationship("MedicalReport", back_populates="patient", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    oauth_accounts = relationship("OAuthAccount", back_populates="user", cascade="all, delete-orphan")
 
 
 class RefreshToken(Base):
@@ -50,6 +51,30 @@ class RefreshToken(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="refresh_tokens")
+
+
+class OAuthAccount(Base):
+    """A third-party identity (Google/GitHub) linked to a user account.
+
+    One user may have multiple provider identities, and one provider identity
+    is always unique. Linking is keyed by (provider, provider_account_id); the
+    email address on the User row is the source of truth for account linking.
+    """
+
+    __tablename__ = "oauth_accounts"
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_account_id",
+                         name="uq_oauth_provider_account"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    provider = Column(String(20), nullable=False)
+    provider_account_id = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="oauth_accounts")
 
 
 class PatientProfile(Base):

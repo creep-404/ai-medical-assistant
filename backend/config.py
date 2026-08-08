@@ -78,6 +78,19 @@ class Settings(BaseSettings):
     ACCOUNT_LOCKOUT_THRESHOLD: int = 5
     ACCOUNT_LOCKOUT_MINUTES: int = 15
 
+    # OAuth (Google / GitHub).
+    # Empty by default: the authorize endpoints refuse to start OAuth until
+    # both the client id and secret are configured per provider.
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+
+    # Public-facing base URL of this API. Used to build provider callback
+    # URLs. In production set it to the deployed backend URL (e.g. the
+    # Vercel domain that rewrites /api/* to this service).
+    PUBLIC_API_URL: str = "http://localhost:8000"
+
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:

@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { AuthLayout } from '@/components/layout/AuthLayout'
 import { Button } from '@/components/ui/Button'
 import { Field, Input, Label, FieldError } from '@/components/ui/Form'
+import OAuthButtons from '@/components/ui/OAuthButtons'
 import { cn } from '@/lib/cn'
 
 export default function RegisterPage() {
@@ -215,6 +216,21 @@ export default function RegisterPage() {
           {loading ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
+
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-cream-300 dark:border-ink-700" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-cream-100 dark:bg-ink-950 text-ink-400 dark:text-cream-400/60">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <OAuthButtons className="mt-4" />
+      </div>
 
       <p className="mt-6 text-center text-sm text-ink-500 dark:text-cream-400/70">
         Already have an account?{' '}
