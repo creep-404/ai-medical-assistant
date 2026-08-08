@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL === undefined
-    ? 'http://localhost:8000'
-    : process.env.NEXT_PUBLIC_API_URL;
+// Same-origin by default (frontend + backend share the Vercel domain).
+// Local dev overrides it via frontend/.env.local (http://localhost:8000).
+// NEXT_PUBLIC_* vars are inlined at build time, so on Vercel leaving the var
+// unset/empty gives a relative base URL and /api/* routes through vercel.json.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '') || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
