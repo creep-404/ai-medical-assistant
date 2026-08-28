@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/services/api';
@@ -145,29 +145,7 @@ export default function ChatPage() {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    
-  // Welcome content - extracted to avoid TSX conditional complexity
-  const welcomeContent = showWelcome && messages.length === 0 ? (
-    <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center mx-auto mb-4">
-        <Bot className="h-8 w-8 text-white" />
-      </div>
-      <h3 className="text-lg font-semibold text-ink-900 dark:text-cream-100 mb-2">
-        Welcome to Medi AI
-      </h3>
-      <p className="text-sm text-ink-500 dark:text-cream-300/70 max-w-xs mx-auto mb-4">
-        I'm your personal health assistant. Ask me about your predictions, medicines, diet, or any health questions.
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Badge variant="info" className="text-xs">Symptoms & Conditions</Badge>
-        <Badge variant="info" className="text-xs">Medicines & Dosage</Badge>
-        <Badge variant="info" className="text-xs">Diet & Nutrition</Badge>
-        <Badge variant="info" className="text-xs">Appointments</Badge>
-      </div>
-    </div>
-  ) : null;
-
-return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Append a message to state
@@ -185,30 +163,6 @@ return () => window.removeEventListener('keydown', handleKeyDown);
     setShowWelcome(false);
     setShowSuggestions(false);
   }, []);
-
-  // Render welcome content
-  const renderWelcome = () => {
-    if (!showWelcome || messages.length > 0) return null;
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center mx-auto mb-4">
-          <Bot className="h-8 w-8 text-white" />
-        </div>
-        <h3 className="text-lg font-semibold text-ink-900 dark:text-cream-100 mb-2">
-          Welcome to Medi AI
-        </h3>
-        <p className="text-sm text-ink-500 dark:text-cream-300/70 max-w-xs mx-auto mb-4">
-          I'm your personal health assistant. Ask me about your predictions, medicines, diet, or any health questions.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Badge variant="info" className="text-xs">Symptoms & Conditions</Badge>
-          <Badge variant="info" className="text-xs">Medicines & Dosage</Badge>
-          <Badge variant="info" className="text-xs">Diet & Nutrition</Badge>
-          <Badge variant="info" className="text-xs">Appointments</Badge>
-        </div>
-      </div>
-    );
-  };
 
   // Send message to backend
   const sendUserMessage = useCallback(async () => {
@@ -254,7 +208,7 @@ return () => window.removeEventListener('keydown', handleKeyDown);
 
   // Handle suggestion click
   const handleSuggestionClick = (question: string) => {
-    messageTextRef.current = question;
+    setMessageText(question);
     sendUserMessage();
   };
 
@@ -286,113 +240,183 @@ return () => window.removeEventListener('keydown', handleKeyDown);
     }
   };
 
-  return (
-    <Card className="min-h-screen flex flex-col h-full max-w-3xl mx-auto">
-      {/* Header */}
-      <CardHeader className="pb-4 border-b border-cream-200 dark:border-ink-800">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center">
-              <Bot className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-ink-900 dark:text-cream-100">Medi AI</h1>
-              <p className="text-xs text-ink-500 dark:text-cream-300/70">
-                Your MediAssist Health Assistant
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Ollama Status Indicator */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={checkOllamaStatus}
-              disabled={ollamaChecking}
-              title={ollamaChecking ? 'Checking...' : isOllamaHealthy ? 'Medi AI Ready' : 'Ollama Unavailable'}
-            >
-              {ollamaChecking ? (
-                <Loader2 className="h-4 w-4 animate-spin text-ink-400" />
-              ) : isOllamaHealthy ? (
-                <span className="flex items-center gap-1.5 text-secondary-600 dark:text-secondary-400">
-                  <span className="w-2 h-2 rounded-full bg-secondary-500" />
-                  <Shield className="h-3.5 w-3.5" />
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 text-red-500">
-                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <AlertCircle className="h-3.5 w-3.5" />
-                </span>
-              )}
-            </Button>
+  // Welcome content - extracted to avoid TSX conditional complexity
+  const welcomeContent = showWelcome && messages.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center px-4">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center mx-auto mb-4">
+        <Bot className="h-8 w-8 text-white" />
+      </div>
+      <h3 className="text-lg font-semibold text-ink-900 dark:text-cream-100 mb-2">
+        Welcome to Medi AI
+      </h3>
+      <p className="text-sm text-ink-500 dark:text-cream-300/70 max-w-xs mx-auto mb-4">
+        I'm your personal health assistant. Ask me about your predictions, medicines, diet, or any health questions.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Badge variant="info" className="text-xs">Symptoms & Conditions</Badge>
+        <Badge variant="info" className="text-xs">Medicines & Dosage</Badge>
+        <Badge variant="info" className="text-xs">Diet & Nutrition</Badge>
+        <Badge variant="info" className="text-xs">Appointments</Badge>
+      </div>
+    </div>
+  ) : null;
 
-            {/* Clear Chat */}
-            {messages.length > 0 && (
+  return (
+    <TooltipProvider>
+      <Card className="min-h-screen flex flex-col h-full max-w-3xl mx-auto">
+        {/* Header */}
+        <CardHeader className="pb-4 border-b border-cream-200 dark:border-ink-800">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-ink-900 dark:text-cream-100">Medi AI</h1>
+                <p className="text-xs text-ink-500 dark:text-cream-300/70">
+                  Your MediAssist Health Assistant
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Ollama Status Indicator */}
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => {
-                  setMessages([]);
-                  setShowWelcome(true);
-                  setShowSuggestions(true);
-                }}
-                title="Clear conversation"
+                onClick={checkOllamaStatus}
+                disabled={ollamaChecking}
+                title={ollamaChecking ? 'Checking...' : isOllamaHealthy ? 'Medi AI Ready' : 'Ollama Unavailable'}
               >
-                <X className="h-4 w-4" />
+                {ollamaChecking ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-ink-400" />
+                ) : isOllamaHealthy ? (
+                  <span className="flex items-center gap-1.5 text-secondary-600 dark:text-secondary-400">
+                    <span className="w-2 h-2 rounded-full bg-secondary-500" />
+                    <Shield className="h-3.5 w-3.5" />
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-red-500">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <AlertCircle className="h-3.5 w-3.5" />
+                  </span>
+                )}
               </Button>
-            )}
 
-            {/* Logout */}
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={logout} title="Logout">
-              <Settings className="h-4 w-4" />
-            </Button>
+              {/* Clear Chat */}
+              {messages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setMessages([]);
+                    setShowWelcome(true);
+                    setShowSuggestions(true);
+                  }}
+                  title="Clear conversation"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Logout */}
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={logout} title="Logout">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-<ChatMessages
-            messages={messages}
-            showWelcome={showWelcome}
-            isSubmitting={isSubmitting}
-            isOllamaHealthy={isOllamaHealthy}
-            ollamaChecking={ollamaChecking}
-            onSendMessage={sendUserMessage}
-            onCheckOllamaStatus={checkOllamaStatus}
-            onClearMessages={() => {
-              setMessages([]);
-              setShowWelcome(true);
-              setShowSuggestions(true);
-            }}
-            onSuggestionClick={handleSuggestionClick}
-            onCopyMessage={copyToClipboard}
-            messageTextRef={messageTextRef}
-            inputRef={inputRef}
-            scrollAreaRef={scrollAreaRef}
-            messagesEndRef={messagesEndRef}
-            setMessageText={setMessageText}
-            setIsSubmitting={setIsSubmitting}
-            setError={setError}
-            setShowSuggestions={setShowSuggestions}
-            setShowWelcome={setShowWelcome}
-            setIsOllamaHealthy={setIsOllamaHealthy}
-            setOllamaChecking={setOllamaChecking}
-            error={error}
-            setError={setError}
-            showSuggestions={showSuggestions}
-            showWelcome={showWelcome}
-            isSubmitting={isSubmitting}
-            isOllamaHealthy={isOllamaHealthy}
-            ollamaChecking={ollamaChecking}
-            error={error}
-            setIsSubmitting={setIsSubmitting}
-            setError={setError}
-            setShowSuggestions={setShowSuggestions}
-            setShowWelcome={setShowWelcome}
-            setIsOllamaHealthy={setIsOllamaHealthy}
-            setOllamaChecking={setOllamaChecking}
-          />
+        {/* Messages */}
+        <CardContent className="flex-1 p-0">
+          <div className="h-[calc(100vh-280px)] min-h-[400px] max-h-[600px] p-4 overflow-y-auto">
+            <div className="space-y-4" ref={scrollAreaRef}>
+              {welcomeContent}
+
+              {/* Messages */}
+              <div className="space-y-3">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      'flex',
+                      msg.role === 'user'
+                        ? 'justify-end items-start'
+                        : 'justify-start items-end'
+                      )}
+                  >
+                    <div
+                      className={cn(
+                        'flex flex-col max-w-[80%] gap-1',
+                        msg.role === 'user'
+                          ? 'items-end'
+                          : 'items-start'
+                        )}
+                    >
+                      {/* Message bubble */}
+                      <div
+                        className={cn(
+                          'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed',
+                          msg.role === 'user'
+                            ? 'bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-100 rounded-br-md'
+                            : 'bg-cream-100 dark:bg-ink-950 text-ink-900 dark:text-cream-100 rounded-bl-md'
+                        )}
+                      >
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          {msg.content.split('\n').map((line, i) => (
+                            <p key={i} className="whitespace-pre-wrap">{line}</p>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Metadata & Actions */}
+                      <div className="flex items-center gap-2 mt-1 px-1">
+                        <span className="text-[10px] text-ink-400 dark:text-cream-300/50">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+
+                        {msg.metadata?.guard_decision && (
+                          <Badge
+                            variant={msg.metadata.guard_decision === 'block' ? 'danger' : 'info'}
+                            className="text-[10px] px-1.5 py-0.5"
+                          >
+                            {msg.metadata.guard_category || msg.metadata.guard_decision}
+                          </Badge>
+                        )}
+
+                        {msg.role === 'assistant' && (
+                          <button
+                            onClick={() => copyToClipboard(msg.content)}
+                            className="p-1 rounded hover:bg-cream-200 dark:hover:bg-ink-800 transition-colors"
+                            aria-label="Copy message"
+                            title="Copy message"
+                          >
+                            <Copy className="h-3.5 w-3.5 text-ink-400 dark:text-cream-300/50" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Submitting indicator */}
+              {isSubmitting && (
+                <div className="flex justify-start items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-600 to-primary-400 flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-cream-100 dark:bg-ink-950 rounded-2xl rounded-bl-md">
+                    <span className="text-sm text-ink-500 dark:text-cream-300/70">Medi AI is thinking...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
+            </div>
+          </CardContent>
 
           {/* Input Area */}
           <CardFooter className="p-4 border-t border-cream-200 dark:border-ink-800">
@@ -420,29 +444,35 @@ return () => window.removeEventListener('keydown', handleKeyDown);
             )}
 
             <form onSubmit={(e) => { e.preventDefault(); sendUserMessage(); }} className="flex gap-2">
-              <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 shrink-0"
-              onClick={checkOllamaStatus}
-              disabled={ollamaChecking}
-              title={ollamaChecking ? 'Checking...' : isOllamaHealthy ? 'Ollama connected' : 'Ollama unavailable'}
-            >
-              {ollamaChecking ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isOllamaHealthy ? (
-                <HeartPulse className="h-5 w-5 text-secondary-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              )}
-            </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    onClick={checkOllamaStatus}
+                    disabled={ollamaChecking}
+                  >
+                    {ollamaChecking ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : isOllamaHealthy ? (
+                      <HeartPulse className="h-5 w-5 text-secondary-500" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  {ollamaChecking ? 'Checking...' : isOllamaHealthy ? 'Ollama connected' : 'Ollama unavailable'}
+                </TooltipContent>
+              </Tooltip>
 
               <Input
                 ref={inputRef}
                 placeholder={isOllamaHealthy ? "Ask Medi AI about your health..." : "Ollama unavailable - please start Ollama first"}
-                value={messageTextRef.current}
-                onChange={(e) => messageTextRef.current = e.target.value}
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
                 disabled={isSubmitting || !isOllamaHealthy}
                 className="flex-1 rounded-xl border border-cream-300 dark:border-ink-700 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-primary-100"
                 aria-label="Message input"
@@ -458,7 +488,7 @@ return () => window.removeEventListener('keydown', handleKeyDown);
 
               <Button
                 type="submit"
-                disabled={isSubmitting || !messageTextRef.current.trim() || !isOllamaHealthy}
+                disabled={isSubmitting || !messageText.trim() || !isOllamaHealthy}
                 className="h-10 w-10 rounded-xl shrink-0"
                 aria-label="Send message"
               >
@@ -472,5 +502,6 @@ return () => window.removeEventListener('keydown', handleKeyDown);
             </p>
           </CardFooter>
         </Card>
-      );
+      </TooltipProvider>
+    );
   }
