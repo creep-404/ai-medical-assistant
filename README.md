@@ -18,6 +18,8 @@ MediAssist AI is a production-ready healthcare web application that uses Machine
 - **Medicine Recommendations** - OTC medicine suggestions with dosage information
 - **Home Remedies** - Natural remedy suggestions for common ailments
 - **Diet & Hydration Advice** - Personalized dietary recommendations
+- **Medi AI Assistant** - Local Ollama-powered AI chat assistant (Qwen3.8-2B) for health questions, prediction explanations, and MediAssist feature guidance
+- **Medical Topic Guard** - Validates chat queries stay on health/MediAssist topics
 
 ### Patient Dashboard
 - Recent diagnosis history
@@ -47,8 +49,52 @@ MediAssist AI is a production-ready healthcare web application that uses Machine
 - Emergency contacts
 - Health timeline
 
+### Nearby Doctor & Appointment Booking
+- **Location-based search** - Browser geolocation or manual city search via Nominatim
+- **OpenStreetMap/Overpass integration** - Free nearby search for hospitals, clinics, doctors
+- **Interactive Leaflet map** - User location + nearby providers with distance
+- **Specialist filtering** - Filter by specialty (Cardiologist, Neurologist, etc.)
+- **Distance/radius filters** - 2km, 5km, 10km, 20km
+- **Registered doctor integration** - MediAssist doctors appear on map with distance
+- **Appointment booking flow** - Select provider → pick date/time/reason → book
+- **Appointment status workflow** - Pending → Confirmed/Rejected → Completed/Cancelled
+- **Patient dashboard** - View upcoming/past appointments, cancel/reschedule
+- **Doctor dashboard** - Accept/Reject/Complete appointments
+- **Admin dashboard** - View all appointments, stats, cancel/reschedule
+- **Emergency hospital flow** - Nearest hospitals with directions & emergency contacts
+
 ### UI / Design System
 The frontend was redesigned with a modern, healthcare-focused UI inspired by Maven Clinic — a teal/cream/ink/amber palette with Fraunces display typography, soft shadows, and rounded cards. A reusable component kit lives in `frontend/components/ui/`, and shared app shells (patient/doctor/admin/auth layouts) live in `frontend/components/layout/`. Backend, business logic, services, and data flows are unchanged.
+
+---
+
+## Medi AI Assistant
+
+MediAssist AI includes **Medi AI**, a local AI chat assistant powered by a local Ollama model (`hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M`). It runs entirely locally — no external API calls, no data leaves your machine.
+
+### Features
+- **Chat interface** - Clean, accessible chat UI with markdown support
+- **Prediction context awareness** - When opened from a prediction result, Medi AI receives the prediction context (disease, confidence, specialist, medicines, home remedies, diet, precautions) for relevant answers
+- **MediAssist feature guidance** - Explains how to use Symptom Checker, Nearby Doctors, Appointments, Reports, Reminders
+- **General health education** - Answers general health questions (symptoms, conditions, medicines, diet, lifestyle)
+- **Medical topic guard** - Python-side validator blocks off-topic queries (coding, math, entertainment, politics) before they reach the LLM
+- **Emergency safety** - Emergency symptoms trigger the app's existing emergency flow (hospitals, contacts) instead of AI diagnosis
+
+### Technical Details
+- **Model**: `hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M` (quantized 2B parameter model)
+- **Runtime**: Local Ollama server (`http://localhost:11434`)
+- **Backend endpoint**: `POST /api/chat` (authenticated, with optional prediction context)
+- **Medical topic guard** (`backend/services/medical_guard.py`) - Python-side keyword/pattern filter that blocks off-topic requests before they reach Ollama
+- **Ollama service** (`backend/services/ollama_service.py`) - Async client with health checks, timeouts, markdown stripping
+- **Frontend** - `frontend/pages/chat.tsx` with suggested questions, copy-to-clipboard, Ollama health indicator, loading states, full dark/light mode support
+
+### Requirements
+- Ollama installed and running locally: `ollama pull hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M`
+- Backend `.env`:
+  ```
+  OLLAMA_BASE_URL=http://localhost:11434
+  OLLAMA_MODEL=hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M
+  ```
 
 ---
 
@@ -76,6 +122,8 @@ The frontend was redesigned with a modern, healthcare-focused UI inspired by Mav
 | JWT | Authentication |
 | Pydantic | Data validation |
 | ReportLab | PDF generation |
+| Ollama | Local LLM inference (Medi AI) |
+| Python keyword/pattern matching | Medical topic guard |
 
 ### Machine Learning
 | Technology | Purpose |
@@ -149,6 +197,7 @@ mediassist-ai/
 - Node.js 18+
 - PostgreSQL 15+ (optional — SQLite works locally out of the box)
 - npm or yarn
+- **Ollama** (for Medi AI) — `ollama pull hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M`
 
 ### 1. Clone the Repository
 ```bash
@@ -175,7 +224,7 @@ pip install -r requirements.txt
 
 # Set up environment variables
 cp ../.env.example .env
-# Edit .env with your database credentials
+# Edit .env with your database credentials and Ollama settings
 
 # (Optional) For a fresh database, run Alembic migrations:
 alembic upgrade head
@@ -185,6 +234,20 @@ python -m backend.services.seed_service
 
 # Run the backend
 python -m uvicorn backend.main:app --reload
+```
+
+**Note**: For Medi AI to work, ensure Ollama is running locally:
+```bash
+# Install Ollama (if not already installed)
+# Windows: Download from https://ollama.com/download
+# Mac: brew install ollama
+# Linux: curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull the Medi AI model
+ollama pull hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M
+
+# Start Ollama server (runs on http://localhost:11434)
+ollama serve
 ```
 
 ### 3. Frontend Setup
@@ -334,6 +397,12 @@ If any emergency symptom is detected, the system displays an emergency alert and
 | GET | `/api/doctors` | List all doctors |
 | GET | `/api/doctors/{id}` | Get doctor details |
 | GET | `/api/doctors/search` | Search doctors |
+
+### Chat (Medi AI)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/chat` | Send message to Medi AI (with optional context) |
+| GET | `/api/chat/health` | Health check (includes Ollama connectivity) |
 
 ---
 
