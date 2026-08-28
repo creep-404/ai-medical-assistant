@@ -140,7 +140,7 @@ MediAssist AI includes **Medi AI**, a local AI chat assistant powered by a local
 - Logistic Regression
 
 ### Database
-PostgreSQL in production (Railway); SQLite for local development fallback.
+SQLite for local development (default); PostgreSQL optional via `DATABASE_URL`.
 
 ---
 
@@ -417,15 +417,28 @@ If any emergency symptom is detected, the system displays an emergency alert and
 
 ---
 
-## Deployment
+## Local Development
 
-See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full, step-by-step production guide:
+This repository is configured for **local development only**.
 
-- **Frontend** → Vercel (`https://mediassist.dpdns.org`)
-- **Backend** → Railway (`https://api.mediassist.dpdns.org`)
-- **Database** → PostgreSQL (Railway plugin), with SQLite as a local-only fallback
-- Alembic migrations, environment variables, custom domains, and the exact DNS records
-  are all covered there.
+- **Frontend** → Next.js at `http://localhost:3000`
+- **Backend** → FastAPI at `http://localhost:8000`
+- **Database** → SQLite (`mediassist.db`) by default; PostgreSQL optional via `DATABASE_URL`
+- **Medi AI** → Local Ollama at `http://localhost:11434` with `hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M`
+
+Run the stack with `start.bat` (Windows) or manually:
+
+```bash
+# Terminal 1 - Ollama
+ollama serve
+ollama pull hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M
+
+# Terminal 2 - Backend
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+
+# Terminal 3 - Frontend
+cd frontend && npm run dev
+```
 
 ---
 
