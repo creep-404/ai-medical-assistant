@@ -19,6 +19,7 @@ from backend.api import (
     symptom_routes,
     doctor_routes,
     nearby_routes,
+    chat_routes,
 )
 from backend.config import settings
 
@@ -115,7 +116,7 @@ app.include_router(disease_routes.router, prefix="/api", tags=["Diseases"])
 app.include_router(report_routes.router, prefix="/api", tags=["Reports"])
 app.include_router(symptom_routes.router, prefix="/api", tags=["Symptoms"])
 app.include_router(doctor_routes.router, prefix="/api", tags=["Doctors"])
-app.include_router(nearby_routes.router, prefix="/api", tags=["Nearby"])
+app.include_router(chat_routes.router, prefix="/api", tags=["Chat"])
 
 
 @app.get("/")

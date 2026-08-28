@@ -86,6 +86,13 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_ID: str = ""
     GITHUB_CLIENT_SECRET: str = ""
 
+    # Gemini API key for the medical assistant chatbot (legacy).
+    GEMINI_API_KEY: str = ""
+
+    # Ollama configuration for local LLM (Medi AI).
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "hf.co/empero-ai/Qwen3.8-2B-Distill-GGUF:Q5_K_M"
+
     # Public-facing base URL of this API. Used to build provider callback
     # URLs. In production set it to the deployed backend URL (e.g. the
     # Vercel domain that rewrites /api/* to this service).

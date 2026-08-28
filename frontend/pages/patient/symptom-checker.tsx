@@ -586,6 +586,14 @@ export default function SymptomCheckerPage() {
                   Generate Report
                 </Button>
                 <Link
+                  href={`/chat?context=prediction&disease=${encodeURIComponent(result.disease || '')}&specialist=${encodeURIComponent(result.specialist || '')}&confidence=${result.confidence || 0}`}
+                >
+                  <Button>
+                    <Sparkles className="h-4 w-4" />
+                    Ask Medi AI
+                  </Button>
+                </Link>
+                <Link
                   href={`/patient/nearby-doctors?disease=${encodeURIComponent(result.disease || '')}&specialist=${encodeURIComponent(result.specialist || '')}`}
                 >
                   <Button variant="secondary">

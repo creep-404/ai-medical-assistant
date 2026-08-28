@@ -13,11 +13,14 @@ import {
   FileText,
   Bell,
   Activity,
+  MessageSquare,
+  Sparkles,
 } from 'lucide-react'
 
 const nav = [
   { label: 'Dashboard', href: '/patient/dashboard', icon: LayoutDashboard },
   { label: 'Symptom Checker', href: '/patient/symptom-checker', icon: Search },
+  { label: 'Medi AI Assistant', href: '/chat', icon: Sparkles },
   { label: 'Nearby Doctors', href: '/patient/nearby-doctors', icon: MapPin },
   { label: 'My Appointments', href: '/patient/appointments', icon: CalendarDays },
   { label: 'Diagnosis History', href: '/patient/history', icon: History },

@@ -16,6 +16,7 @@ import {
   Search,
   AlertTriangle,
   Sparkles,
+  MessageSquare,
 } from 'lucide-react';
 import { PatientLayout } from '@/components/layout/PatientLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -389,6 +390,21 @@ export default function PatientDashboard() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
+              <Link href="/chat">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/30 dark:to-purple-900/30 text-primary-700 dark:text-primary-200 hover:from-primary-100 hover:to-purple-100 dark:hover:from-primary-900/50 dark:hover:to-purple-900/50 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-purple-600 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Medi AI Assistant</p>
+                    <p className="text-xs text-primary-500 dark:text-primary-300/70">Chat with your health AI</p>
+                  </div>
+                </motion.button>
+              </Link>
               <Link href="/patient/symptom-checker">
                 <motion.button
                   whileHover={{ scale: 1.02 }}

@@ -18,7 +18,9 @@ let refreshPromise: Promise<any> | null = null;
 
 function redirectToLogin() {
   if (typeof window !== 'undefined') {
-    window.location.href = '/login';
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+    }
   }
 }
 

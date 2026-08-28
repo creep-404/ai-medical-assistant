@@ -30,7 +30,6 @@ export default function LoginPage() {
     if (params.get('oauth') === 'success') {
       setOauthPending(true)
       toast.success('Sign in successful!')
-      window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
 
